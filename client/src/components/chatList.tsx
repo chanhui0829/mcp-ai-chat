@@ -13,7 +13,7 @@ export default function ChatList() {
 
   return (
     <div className="w-64 bg-white border-r p-4 flex flex-col">
-      {/* 🔥 검색창 */}
+      {/* 검색창 */}
       <input
         value={search}
         onChange={(e) => setSearch(e.target.value)}
@@ -21,7 +21,7 @@ export default function ChatList() {
         className="mb-3 pl-3 p-2 border rounded-lg text-sm"
       />
 
-      {/* 🔥 새 채팅 버튼 */}
+      {/* 새 채팅 버튼 */}
       <button
         onClick={createChat}
         className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 transition text-white py-2 pr-2 rounded-lg mb-4"
@@ -29,10 +29,10 @@ export default function ChatList() {
         <FiPlus /> 새 채팅
       </button>
 
-      {/* 🔥 섹션 텍스트 추가 */}
+      {/* 섹션 텍스트 추가 */}
       <div className="text-xs text-left text-gray-400 mb-2 px-1">최근</div>
 
-      {/* 🔥 채팅 리스트 */}
+      {/* 채팅 리스트 */}
       <div className="flex-1 overflow-y-auto space-y-1">
         {filteredChats.map((chat) => (
           <div
@@ -43,7 +43,7 @@ export default function ChatList() {
                 : 'border-transparent hover:bg-gray-50'
             }`}
           >
-            {/* 🔥 좌측 정렬 + 강조 */}
+            {/* 좌측 정렬 + 강조 */}
             <div
               onClick={() => setCurrentChat(chat.id)}
               className="flex-1 truncate text-left font-medium"
