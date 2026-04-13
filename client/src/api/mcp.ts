@@ -1,8 +1,11 @@
 import axios from 'axios';
 
-const MCP_URL = import.meta.env.VITE_API_URL + '/mcp' || 'http://localhost:4000/mcp';
+const MCP_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/mcp`
+  : 'http://localhost:4000/mcp';
 
 export const sendMessage = async (prompt: string) => {
+  console.log('MCP_URL:', MCP_URL);
   const res = await axios.post(MCP_URL, { prompt });
   return res.data.result;
 };

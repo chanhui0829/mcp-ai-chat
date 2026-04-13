@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import axios from 'axios';
 import OpenAI from 'openai';
 import 'dotenv/config';
 
@@ -13,103 +14,55 @@ const openai = new OpenAI({
 });
 
 /**
- * 🔥 toolMap (타입 안정화)
+ * 🔥 toolMap
  */
 const toolMap: Record<string, (args: any) => Promise<any>> = {
-  get_weather: async ({ city }: { city: string }) => ({
-    city,
-    temperature: '22°C',
-    condition: 'Sunny',
-  }),
+  search: async ({ query }: { query: string }) => {
+    try {
+      console.log('🔥 네이버 API 호출:', query);
 
-  calculate_sum: async ({ a, b }: { a: number; b: number }) => ({
-    result: a + b,
-  }),
-
-  get_current_time: async () => ({
-    time: new Date().toLocaleString(),
-  }),
-
-  search: async ({ query }: { query: string }) => ({
-    results: [`🔎 ${query} 검색 결과`],
-  }),
-
-  summarize_text: async ({ text }: { text: string }) => ({
-    summary: text.slice(0, 80) + '...',
-  }),
-
-  // 🔥 진짜 번역
-  translate_text: async ({ text }: { text: string }) => {
-    const res = await openai.chat.completions.create({
-      model: 'openrouter/free',
-      messages: [
-        {
-          role: 'system',
-          content: 'Translate to English. Only output result.',
+      const res = await axios.get('https://openapi.naver.com/v1/search/webkr.json', {
+        params: { query, display: 5 },
+        headers: {
+          'X-Naver-Client-Id': process.env.NAVER_CLIENT_ID!,
+          'X-Naver-Client-Secret': process.env.NAVER_CLIENT_SECRET!,
         },
-        { role: 'user', content: text },
-      ],
-    });
+      });
 
-    return {
-      translated: res.choices[0].message.content,
-    };
+      const items = res.data.items;
+
+      return {
+        result: items
+          .map(
+            (item: any, i: number) => `
+### ${i + 1}. ${item.title.replace(/<[^>]+>/g, '')}
+
+${item.description.replace(/<[^>]+>/g, '')}
+
+🔗 ${item.link}
+`
+          )
+          .join('\n'),
+      };
+    } catch (err: any) {
+      console.error('❌ 네이버 API 에러:', err.response?.data || err.message);
+
+      return {
+        result: '❌ 네이버 검색 실패',
+      };
+    }
   },
-
-  create_todo: async ({ task }: { task: string }) => ({
-    todo: `✅ ${task}`,
-  }),
 };
 
 /**
- * 🔥 GPT에게 tool 설명
+ * 🔥 tool 정의
  */
 const tools = [
   {
     type: 'function',
     function: {
-      name: 'get_weather',
-      description: 'Get weather information',
-      parameters: {
-        type: 'object',
-        properties: {
-          city: { type: 'string' },
-        },
-        required: ['city'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'calculate_sum',
-      description: 'Add two numbers',
-      parameters: {
-        type: 'object',
-        properties: {
-          a: { type: 'number' },
-          b: { type: 'number' },
-        },
-        required: ['a', 'b'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'get_current_time',
-      description: 'Get current time',
-      parameters: {
-        type: 'object',
-        properties: {},
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
       name: 'search',
-      description: 'Search something',
+      description: 'Search latest information from the internet',
       parameters: {
         type: 'object',
         properties: {
@@ -119,54 +72,10 @@ const tools = [
       },
     },
   },
-
-  // 🔥 기존 것 유지
-  {
-    type: 'function',
-    function: {
-      name: 'translate_text',
-      description: 'Translate text to English',
-      parameters: {
-        type: 'object',
-        properties: {
-          text: { type: 'string' },
-        },
-        required: ['text'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'summarize_text',
-      description: 'Summarize text',
-      parameters: {
-        type: 'object',
-        properties: {
-          text: { type: 'string' },
-        },
-        required: ['text'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'create_todo',
-      description: 'Create todo',
-      parameters: {
-        type: 'object',
-        properties: {
-          task: { type: 'string' },
-        },
-        required: ['task'],
-      },
-    },
-  },
 ];
 
 /**
- * 🔥 MCP endpoint (function calling)
+ * 🔥 MCP endpoint
  */
 app.post('/mcp', async (req, res) => {
   const { prompt } = req.body;
@@ -175,7 +84,15 @@ app.post('/mcp', async (req, res) => {
     const response = await openai.chat.completions.create({
       model: 'openrouter/free',
       messages: [
-        { role: 'system', content: 'You are a smart AI assistant.' },
+        {
+          role: 'system',
+          content: `
+너는 똑똑한 AI야.
+
+- 일반 질문 → 직접 답변
+- 최신 정보 필요 → search tool 사용
+`,
+        },
         { role: 'user', content: prompt },
       ],
       tools: tools as any,
@@ -183,7 +100,6 @@ app.post('/mcp', async (req, res) => {
 
     const message = response.choices[0].message;
 
-    // 🔥 tool 호출 처리
     if ((message as any).tool_calls) {
       const toolCall = (message as any).tool_calls[0];
 
@@ -192,17 +108,14 @@ app.post('/mcp', async (req, res) => {
 
       const toolFn = toolMap[toolName];
 
-      if (!toolFn) {
-        return res.json({ result: '❌ tool not found' });
-      }
+      const toolResult = await toolFn(args);
 
-      const result = await toolFn(args);
-
-      return res.json({ result });
+      return res.json(toolResult); // 🔥 result 그대로 내려줌
     }
 
-    // 🔥 일반 응답
-    return res.json({ result: message.content });
+    return res.json({
+      result: message.content,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'failed' });
@@ -210,5 +123,5 @@ app.post('/mcp', async (req, res) => {
 });
 
 app.listen(4000, () => {
-  console.log('🚀 MCP Function Calling Server running');
+  console.log('🚀 MCP Server running FINAL');
 });
