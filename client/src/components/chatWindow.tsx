@@ -19,7 +19,7 @@ function CodeBlock({ language, value }: { language: string; value: string }) {
   };
 
   return (
-    <div className="relative overflow-x-auto">
+    <div className="relative overflow-x-auto rounded-lg">
       <button
         onClick={copy}
         className="absolute top-2 right-2 text-xs bg-gray-800 text-white px-2 py-1 rounded"
@@ -40,7 +40,6 @@ function CodeBlock({ language, value }: { language: string; value: string }) {
 const markdownComponents: Components = {
   code(props) {
     const { className, children } = props;
-
     const match = /language-(\w+)/.exec(className || '');
     const code = String(children).replace(/\n$/, '');
 
@@ -83,36 +82,12 @@ export default function ChatWindow({ typing, loading }: ChatWindowProps) {
   };
 
   return (
-    <div className="flex-1 p-4 md:p-6 space-y-6 overflow-y-auto">
+    <div className="flex-1 p-4 md:p-6 space-y-5 overflow-y-auto">
       {currentChat?.messages.map((msg, i) => (
-        <div
-          key={i}
-          className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
-        >
-          {msg.role === 'ai' ? (
-            <div className="flex gap-3 w-full md:max-w-[80%] max-w-[95%]">
-              {/* 🤖 아이콘 */}
-              <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-gray-300">
-                🤖
-              </div>
-
-              <div className="relative group px-4 md:px-5 py-3 md:py-4 rounded-2xl bg-white shadow-sm border border-gray-200 space-y-3">
-                <button
-                  onClick={() => copyToClipboard(msg.content, i)}
-                  className="absolute top-2 right-3 text-xs opacity-0 group-hover:opacity-100"
-                >
-                  {copiedIndex === i ? '✅' : '📋'}
-                </button>
-
-                <div className="text-xs text-gray-400 mb-2">🤖 AI 답변</div>
-
-                <div className="prose prose-sm max-w-none whitespace-pre-wrap break-words leading-7">
-                  <ReactMarkdown components={markdownComponents}>{msg.content}</ReactMarkdown>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="relative group w-full md:max-w-[80%] max-w-[95%] px-4 py-2 rounded-2xl bg-blue-500 text-white">
+        <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          {/* ================= USER ================= */}
+          {msg.role === 'user' ? (
+            <div className="relative group max-w-[80%] md:max-w-[65%] px-4 py-2 rounded-2xl bg-blue-500 text-white">
               <button
                 onClick={() => copyToClipboard(msg.content, i)}
                 className="absolute top-1 right-2 text-xs opacity-0 group-hover:opacity-100"
@@ -124,23 +99,39 @@ export default function ChatWindow({ typing, loading }: ChatWindowProps) {
                 <ReactMarkdown>{msg.content}</ReactMarkdown>
               </div>
             </div>
-          )}
+          ) : (
+            /* ================= AI ================= */
+            <div className="flex gap-3 w-full max-w-[80%] md:max-w-[70%]">
+              {/* 🤖 아이콘 */}
+              <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-gray-300">
+                🤖
+              </div>
 
-          {/* 시간 */}
-          <div className="text-[10px] text-gray-400 mt-1 px-1">
-            {msg.time &&
-              new Date(msg.time).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-          </div>
+              {/* 카드 */}
+              <div className="relative group px-4 py-3 rounded-2xl bg-white border border-gray-200 shadow-sm">
+                <button
+                  onClick={() => copyToClipboard(msg.content, i)}
+                  className="absolute top-2 right-3 text-xs opacity-0 group-hover:opacity-100"
+                >
+                  {copiedIndex === i ? '✅' : '📋'}
+                </button>
+
+                {/* 🔥 여백 줄임 */}
+                <div className="text-xs text-gray-400 mb-1">🤖 AI 답변</div>
+
+                <div className="prose prose-sm max-w-none whitespace-pre-wrap break-words leading-7">
+                  <ReactMarkdown components={markdownComponents}>{msg.content}</ReactMarkdown>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       ))}
 
-      {/* 로딩 */}
+      {/* ================= 로딩 ================= */}
       {loading && !typing && (
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-gray-300">
+          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-300">
             🤖
           </div>
 
@@ -152,10 +143,10 @@ export default function ChatWindow({ typing, loading }: ChatWindowProps) {
         </div>
       )}
 
-      {/* 타이핑 */}
+      {/* ================= 타이핑 ================= */}
       {typing && (
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-gray-300">
+          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-300">
             🤖
           </div>
 
