@@ -92,13 +92,19 @@ AI 기반 채팅 시스템으로,
 ---
 
 ## 🏗️ 아키텍처
-
-```mermaid
-graph TD
-A[Frontend React + Vite] --> B[Backend Express]
-B --> C[OpenRouter LLM]
-B --> D[Naver API]
-
+Frontend (React + Vite)
+│
+▼
+Backend (Express)
+│
+┌───────────────┐
+│ OpenRouter LLM │
+└───────────────┘
+│
+▼
+┌───────────────┐
+│ Naver API │
+└───────────────┘
 
 ---
 
