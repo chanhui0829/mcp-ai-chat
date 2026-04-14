@@ -19,7 +19,7 @@ function CodeBlock({ language, value }: { language: string; value: string }) {
   };
 
   return (
-    <div className="relative">
+    <div className="relative overflow-x-auto rounded-lg">
       <button
         onClick={copy}
         className="absolute top-2 right-2 text-xs bg-gray-800 text-white px-2 py-1 rounded"
@@ -40,7 +40,6 @@ function CodeBlock({ language, value }: { language: string; value: string }) {
 const markdownComponents: Components = {
   code(props) {
     const { className, children } = props;
-
     const match = /language-(\w+)/.exec(className || '');
     const code = String(children).replace(/\n$/, '');
 
@@ -48,7 +47,15 @@ const markdownComponents: Components = {
       return <CodeBlock language={match[1]} value={code} />;
     }
 
-    return <code className="bg-gray-200 px-1 rounded">{children}</code>;
+    return <code className="bg-gray-200 px-1 rounded break-words">{children}</code>;
+  },
+
+  table({ children }) {
+    return (
+      <div className="overflow-x-auto">
+        <table className="table-auto">{children}</table>
+      </div>
+    );
   },
 };
 
@@ -68,9 +75,6 @@ export default function ChatWindow({ typing, loading }: ChatWindowProps) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [currentChat?.messages, typing, loading]);
 
-  /**
-   * 🔥 전체 메시지 복사
-   */
   const copyToClipboard = (text: string, index: number) => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
@@ -78,40 +82,12 @@ export default function ChatWindow({ typing, loading }: ChatWindowProps) {
   };
 
   return (
-    <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+    <div className="flex-1 p-4 md:p-6 space-y-5 overflow-y-auto">
       {currentChat?.messages.map((msg, i) => (
-        <div
-          key={i}
-          className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
-        >
-          {msg.role === 'ai' ? (
-            <div className="flex gap-3 max-w-[80%]">
-              {/* 🤖 아이콘 */}
-              <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-300">
-                🤖
-              </div>
-
-              {/* 🔥 AI 카드 */}
-              <div className="relative group px-5 py-4 rounded-2xl bg-white shadow-sm border border-gray-200">
-                {/* 🔥 전체 복사 */}
-                <button
-                  onClick={() => copyToClipboard(msg.content, i)}
-                  className="absolute top-2 right-3 text-xs opacity-0 group-hover:opacity-100"
-                >
-                  {copiedIndex === i ? '✅' : '📋'}
-                </button>
-
-                {/* 🔥 AI 헤더 */}
-                <div className="text-xs text-gray-400 mb-2">🤖 AI 답변</div>
-
-                {/* 🔥 본문 */}
-                <div className="prose prose-sm max-w-none whitespace-pre-wrap leading-relaxed">
-                  <ReactMarkdown components={markdownComponents}>{msg.content}</ReactMarkdown>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="relative group max-w-[80%] px-4 py-2 rounded-2xl bg-blue-500 text-white">
+        <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          {/* ================= USER ================= */}
+          {msg.role === 'user' ? (
+            <div className="relative group max-w-[80%] md:max-w-[65%] px-4 py-2 rounded-2xl bg-blue-500 text-white">
               <button
                 onClick={() => copyToClipboard(msg.content, i)}
                 className="absolute top-1 right-2 text-xs opacity-0 group-hover:opacity-100"
@@ -119,24 +95,40 @@ export default function ChatWindow({ typing, loading }: ChatWindowProps) {
                 {copiedIndex === i ? '✅' : '📋'}
               </button>
 
-              <div className="prose prose-sm max-w-none whitespace-pre-wrap">
+              <div className="prose prose-sm max-w-none whitespace-pre-wrap break-words">
                 <ReactMarkdown>{msg.content}</ReactMarkdown>
               </div>
             </div>
-          )}
+          ) : (
+            /* ================= AI ================= */
+            <div className="flex gap-3 w-full max-w-[80%] md:max-w-[70%]">
+              {/* 🤖 아이콘 */}
+              <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-gray-300">
+                🤖
+              </div>
 
-          {/* ⏰ 시간 */}
-          <div className="text-[10px] text-gray-400 mt-1 px-1">
-            {msg.time &&
-              new Date(msg.time).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-          </div>
+              {/* 카드 */}
+              <div className="relative group px-4 py-3 rounded-2xl bg-white border border-gray-200 shadow-sm">
+                <button
+                  onClick={() => copyToClipboard(msg.content, i)}
+                  className="absolute top-2 right-3 text-xs opacity-0 group-hover:opacity-100"
+                >
+                  {copiedIndex === i ? '✅' : '📋'}
+                </button>
+
+                {/* 🔥 여백 줄임 */}
+                <div className="text-xs text-gray-400 mb-1">🤖 AI 답변</div>
+
+                <div className="prose prose-sm max-w-none whitespace-pre-wrap break-words leading-7">
+                  <ReactMarkdown components={markdownComponents}>{msg.content}</ReactMarkdown>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       ))}
 
-      {/* 🔥 로딩 */}
+      {/* ================= 로딩 ================= */}
       {loading && !typing && (
         <div className="flex items-start gap-3">
           <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-300">
@@ -151,7 +143,7 @@ export default function ChatWindow({ typing, loading }: ChatWindowProps) {
         </div>
       )}
 
-      {/* 🔥 타이핑 */}
+      {/* ================= 타이핑 ================= */}
       {typing && (
         <div className="flex items-start gap-3">
           <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-300">
