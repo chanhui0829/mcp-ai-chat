@@ -143,7 +143,7 @@ export default function ChatWindow({ typing, loading, onQuickSend }: ChatWindowP
 
                 <div className="text-xs text-gray-400 mb-2">AI 답변</div>
 
-                <div className="whitespace-pre-wrap break-words leading-7 text-sm text-gray-800">
+                <div className="whitespace-pre-wrap break-words leading-7 text-sm text-gray-800  mb-6">
                   <ReactMarkdown components={markdownComponents}>{msg.content}</ReactMarkdown>
                 </div>
               </div>
