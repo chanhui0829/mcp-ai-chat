@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 const openai = new OpenAI({
-  baseURL: 'https://  .ai/api/v1',
+  baseURL: 'https://openrouter.ai/api/v1',
   apiKey: process.env.OPENROUTER_API_KEY,
 });
 
@@ -81,41 +81,35 @@ app.post('/mcp', async (req, res) => {
   const { prompt } = req.body;
 
   try {
-    const response = await openai.chat.completions.create({
+    const stream = await openai.chat.completions.create({
       model: 'openrouter/free',
       messages: [
         {
           role: 'system',
           content: `
-너는 똑똑한 AI야.
+너는 개발자를 돕는 AI다.
 
-- 일반 질문 → 직접 답변
-- 최신 정보 필요 → search tool 사용
-`,
+[중요 규칙]
+
+1. 코드에는 반드시 줄바꿈(\n)을 포함한다.
+2. 한 줄로 코드를 출력하지 않는다.
+3. 코드와 설명은 반드시 분리한다.
+          `,
         },
         { role: 'user', content: prompt },
       ],
-      tools: tools as any,
+      stream: true,
     });
 
-    const message = response.choices[0].message;
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
 
-    if ((message as any).tool_calls) {
-      const toolCall = (message as any).tool_calls[0];
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content || '';
 
-      const toolName = toolCall.function.name;
-      const args = JSON.parse(toolCall.function.arguments);
-
-      const toolFn = toolMap[toolName];
-
-      const toolResult = await toolFn(args);
-
-      return res.json(toolResult); // 🔥 result 그대로 내려줌
+      res.write(content.replace(/\n/g, '\n')); // 🔥 유지
     }
 
-    return res.json({
-      result: message.content,
-    });
+    res.end();
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'failed' });
