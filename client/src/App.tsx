@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useState } from 'react';
 
-import ChatList from './components/chatList';
+import ChatList from './components/chat/chatList';
 import ChatPage from './pages/ChatPage';
 import CaseStudy from './pages/CaseStudy';
 import { useChatStore } from './store/chat.store';
