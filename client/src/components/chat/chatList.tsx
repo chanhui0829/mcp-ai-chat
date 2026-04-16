@@ -89,7 +89,7 @@ export default function ChatList({ setDeleteTargetId, sidebarOpen, setSidebarOpe
         ))}
       </div>
 
-      <div className="pt-2 mt-2 border-t">
+      <div className="pt-1 mt-2 border-t">
         <div className="text-xs text-gray-400 mb-1 px-1">Case Study</div>
 
         <button
