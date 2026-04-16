@@ -25,10 +25,28 @@ export const sendMessageStream = async (prompt: string, onChunk: (text: string) 
 
     const decoder = new TextDecoder();
 
+    let buffer = '';
+
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      onChunk(decoder.decode(value));
+
+      buffer += decoder.decode(value, { stream: true });
+
+      // 🔥 SSE 파싱
+      const lines = buffer.split('\n');
+
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const text = line.replace('data: ', '');
+
+          if (text === '[DONE]') return;
+
+          onChunk(text);
+        }
+      }
     }
   } catch (err) {
     console.error(err);

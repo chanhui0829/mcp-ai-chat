@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FiPlus, FiX } from 'react-icons/fi';
-import { useChatStore } from '../store/chat.store';
+import { useChatStore } from '../../store/chat.store';
 import { useNavigate } from 'react-router-dom';
 
 type Props = {

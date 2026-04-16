@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import ChatWindow from '../components/chatWindow';
-import ChatInput from '../components/chatInput';
+import ChatWindow from '../components/chat/chatWindow';
+import ChatInput from '../components/chat/chatInput';
 import { useChatStore, subscribeChatStorage } from '../store/chat.store';
 import { sendMessageStream } from '../api/mcp';
 
@@ -99,14 +99,14 @@ function ChatPage() {
       addMessage({
         role: 'ai',
         content: formatted,
-        time: '',
+        time: new Date().toISOString(),
       });
       setTyping('');
     } catch {
       addMessage({
         role: 'ai',
         content: '❌ 오류가 발생했습니다. 다시 시도해주세요.',
-        time: '',
+        time: new Date().toISOString(),
       });
       setTyping('');
     } finally {
