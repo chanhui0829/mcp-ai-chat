@@ -125,7 +125,7 @@ function ChatPage() {
 
       setTyping('');
     } catch (err) {
-      if (err.name === 'AbortError') {
+      if (err instanceof Error && err.name === 'AbortError') {
         addMessage({
           role: 'ai',
           content: fullText
