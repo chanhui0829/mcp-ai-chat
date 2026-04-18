@@ -10,45 +10,40 @@ export const sendMessage = async (prompt: string) => {
   return data.result;
 };
 
-export const sendMessageStream = async (
+export const sendMessageStream = (
   prompt: string,
   onChunk: (data: { chunk: string; full: string }) => void,
-  signal?: AbortSignal
+  onDone: (full: string) => void
 ) => {
-  try {
-    const res = await fetch(MCP_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
-      signal,
-    });
+  const url = `${MCP_URL}?prompt=${encodeURIComponent(prompt)}`;
 
-    if (!res.ok) throw new Error('서버 응답 오류');
+  const eventSource = new EventSource(url);
 
-    const reader = res.body?.getReader();
-    if (!reader) throw new Error('스트림 없음');
+  let fullText = '';
 
-    const decoder = new TextDecoder('utf-8');
-
-    let buffer = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value, { stream: true });
-
-      if (chunk) {
-        buffer += chunk;
-
-        onChunk({
-          chunk,
-          full: buffer,
-        });
-      }
+  eventSource.onmessage = (event) => {
+    if (event.data === '[DONE]') {
+      onDone(fullText);
+      eventSource.close();
+      return;
     }
-  } catch (err) {
-    console.error(err);
-    throw err;
-  }
+
+    const chunk = event.data;
+
+    fullText += chunk;
+
+    onChunk({
+      chunk,
+      full: fullText,
+    });
+  };
+
+  eventSource.onerror = (err) => {
+    console.error('SSE error', err);
+    eventSource.close();
+  };
+
+  return () => {
+    eventSource.close();
+  };
 };
