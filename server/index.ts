@@ -5,7 +5,13 @@ import OpenAI from 'openai';
 import 'dotenv/config';
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: ['http://localhost:5173', 'https://mcp-flowchat.vercel.app'],
+    methods: ['GET'],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 const openai = new OpenAI({
@@ -14,73 +20,19 @@ const openai = new OpenAI({
 });
 
 /**
- * 🔥 toolMap
+ * 🔥 MCP endpoint (SSE)
  */
-const toolMap: Record<string, (args: any) => Promise<any>> = {
-  search: async ({ query }: { query: string }) => {
-    try {
-      console.log('🔥 네이버 API 호출:', query);
-
-      const res = await axios.get('https://openapi.naver.com/v1/search/webkr.json', {
-        params: { query, display: 5 },
-        headers: {
-          'X-Naver-Client-Id': process.env.NAVER_CLIENT_ID!,
-          'X-Naver-Client-Secret': process.env.NAVER_CLIENT_SECRET!,
-        },
-      });
-
-      const items = res.data.items;
-
-      return {
-        result: items
-          .map(
-            (item: any, i: number) => `
-### ${i + 1}. ${item.title.replace(/<[^>]+>/g, '')}
-
-${item.description.replace(/<[^>]+>/g, '')}
-
-🔗 ${item.link}
-`
-          )
-          .join('\n\n'),
-      };
-    } catch (err: any) {
-      console.error('❌ 네이버 API 에러:', err.response?.data || err.message);
-
-      return {
-        result: '❌ 네이버 검색 실패',
-      };
-    }
-  },
-};
-
-/**
- * 🔥 tool 정의
- */
-const tools = [
-  {
-    type: 'function',
-    function: {
-      name: 'search',
-      description: 'Search latest information from the internet',
-      parameters: {
-        type: 'object',
-        properties: {
-          query: { type: 'string' },
-        },
-        required: ['query'],
-      },
-    },
-  },
-];
-
-/**
- * 🔥 MCP endpoint
- */
-app.post('/mcp', async (req, res) => {
-  const { prompt } = req.body;
+app.get('/mcp', async (req, res) => {
+  console.log('🔥 MCP HIT', req.query.prompt);
+  const prompt = req.query.prompt as string;
 
   try {
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    if (res.flushHeaders) res.flushHeaders();
+
     const stream = await openai.chat.completions.create({
       model: 'openrouter/free',
       messages: [
@@ -89,14 +41,9 @@ app.post('/mcp', async (req, res) => {
           content: `
 너는 개발자를 돕는 AI다.
 
-[중요 규칙]
-
 1. 반드시 한국어로만 답변한다.
-2. 다른 언어 절대 사용하지 않는다.
-3. 코드 제외 모든 설명은 한국어만 사용한다.
-4. 코드에는 반드시 줄바꿈(\n)을 포함한다.
-5. 한 줄로 코드를 출력하지 않는다.
-6. 코드와 설명은 반드시 분리한다.
+2. 코드 제외 설명은 한국어만 사용한다.
+3. 코드에는 줄바꿈을 포함한다.
 `,
         },
         { role: 'user', content: prompt },
@@ -104,28 +51,24 @@ app.post('/mcp', async (req, res) => {
       stream: true,
     });
 
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-
-    if (res.flushHeaders) res.flushHeaders();
-
     for await (const chunk of stream) {
       const content = chunk.choices[0]?.delta?.content || '';
 
       if (content) {
-        res.write(content);
+        res.write(`data: ${Buffer.from(content, 'utf-8').toString()}\n\n`);
       }
     }
 
-    // ✅ DONE 제거
+    res.write(`data: [DONE]\n\n`);
     res.end();
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed' });
+    res.write(`data: ❌ 오류 발생\n\n`);
+    res.end();
   }
 });
 
 app.listen(4000, () => {
-  console.log('🚀 MCP Server running FINAL');
+  console.log('🔥 SSE VERSION ACTIVE');
+  console.log('🚀 MCP Server (SSE) running');
 });
