@@ -14,10 +14,12 @@ function ChatPage() {
   const [typing, setTyping] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+
   const { id } = useParams();
 
   const currentRequestId = useRef(0);
-  const abortRef = useRef<AbortController | null>(null);
+  const streamRef = useRef<unknown>(null);
 
   useEffect(() => {
     loadChats();
@@ -30,17 +32,20 @@ function ChatPage() {
     }
   }, [id, chats]);
 
-  const handleSend = async () => {
+  const handleSend = () => {
     if (!input.trim() || loading) return;
 
     if (!currentChatId) createChat();
 
     const requestId = ++currentRequestId.current;
-
     const userInput = input;
+
+    const targetChatId = currentChatId;
 
     setInput('');
     setLoading(true);
+    setTyping('');
+    setActiveChatId(targetChatId);
 
     addMessage({
       role: 'user',
@@ -48,28 +53,27 @@ function ChatPage() {
       time: new Date().toISOString(),
     });
 
-    setTyping('');
-
     sendMessageStream(
       userInput,
-      ({ chunk }) => {
+      ({ full }) => {
         if (requestId !== currentRequestId.current) return;
-
         if (loading) setLoading(false);
 
-        setTyping((prev) => prev + chunk);
+        setTyping(full);
       },
-      (fullText) => {
+      (finalText) => {
         if (requestId !== currentRequestId.current) return;
 
         addMessage({
           role: 'ai',
-          content: fullText,
+          content: finalText,
           time: new Date().toISOString(),
         });
 
         setTyping('');
         setLoading(false);
+        setActiveChatId(null);
+        streamRef.current = null;
       }
     );
   };
@@ -79,6 +83,7 @@ function ChatPage() {
       <ChatWindow
         typing={typing}
         loading={loading}
+        activeChatId={activeChatId}
         onQuickSend={(q) => {
           setInput(q);
           setTimeout(() => handleSend(), 0);
@@ -89,7 +94,7 @@ function ChatPage() {
         input={input}
         setInput={setInput}
         onSend={handleSend}
-        onStop={() => abortRef.current?.abort()}
+        onStop={() => {}}
         loading={loading}
       />
     </div>
