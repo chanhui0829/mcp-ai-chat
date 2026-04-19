@@ -2,9 +2,14 @@ import { useChatStore } from '../../store/chat.store';
 import { useState, useEffect, useRef } from 'react';
 import MarkdownRenderer from '../markdown/MarkdownRenderer';
 
+import { Streamdown } from 'streamdown';
+
+import { markdownComponents } from '../markdown/markdownComponents';
+
 type ChatWindowProps = {
   typing: string;
   loading: boolean;
+  activeChatId: string | null;
   onQuickSend: (text: string) => void;
 };
 
@@ -48,9 +53,15 @@ const formatDate = (dateStr: string) => {
   return date.toLocaleDateString();
 };
 
-export default function ChatWindow({ typing, loading, onQuickSend }: ChatWindowProps) {
+export default function ChatWindow({
+  typing,
+  loading,
+  activeChatId,
+  onQuickSend,
+}: ChatWindowProps) {
   const { chats, currentChatId } = useChatStore();
   const currentChat = chats.find((c) => c.id === currentChatId);
+  const isProcessingHere = currentChatId === activeChatId;
 
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -92,7 +103,7 @@ export default function ChatWindow({ typing, loading, onQuickSend }: ChatWindowP
         </div>
       )}
 
-      {/* 기존 메시지 */}
+      {/* 완료 메시지 */}
       {currentChat?.messages.map((msg, i) => {
         const prev = currentChat.messages[i - 1];
         const showDate = !prev || !isSameDay(prev.time, msg.time);
@@ -141,8 +152,8 @@ export default function ChatWindow({ typing, loading, onQuickSend }: ChatWindowP
         );
       })}
 
-      {/* 🔥 1. 로딩  */}
-      {loading && typing.length === 0 && (
+      {/* 1. 로딩  */}
+      {isProcessingHere && loading && typing.length === 0 && (
         <div className="flex gap-3 mb-6">
           <div className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-300">
             🤖
@@ -160,18 +171,19 @@ export default function ChatWindow({ typing, loading, onQuickSend }: ChatWindowP
         </div>
       )}
 
-      {/* 🔥 2. 타이핑 */}
-      {typing && (
+      {/*  타이핑 - Streamdown 컴포넌트 적용 */}
+      {isProcessingHere && typing && (
         <div className="flex gap-3 mb-6">
           <div className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-300">
             🤖
           </div>
-
           <div className="w-full max-w-[70%] px-5 py-4 rounded-2xl bg-white border shadow-md">
             <div className="text-xs text-gray-400 mb-2">AI 답변</div>
 
-            <div className="whitespace-pre-wrap break-words leading-7 text-sm text-gray-800">
-              <MarkdownRenderer content={typing} />
+            <div className="leading-7 text-sm text-gray-800">
+              <Streamdown mode="streaming" components={markdownComponents}>
+                {typing}
+              </Streamdown>
             </div>
           </div>
         </div>

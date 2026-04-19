@@ -16,7 +16,6 @@ export const sendMessageStream = (
   onDone: (full: string) => void
 ) => {
   const url = `${MCP_URL}?prompt=${encodeURIComponent(prompt)}`;
-
   const eventSource = new EventSource(url);
 
   let fullText = '';
@@ -28,14 +27,19 @@ export const sendMessageStream = (
       return;
     }
 
-    const chunk = event.data;
+    try {
+      const parsed = JSON.parse(event.data);
+      const content = parsed.content || '';
 
-    fullText += chunk;
+      fullText += content;
 
-    onChunk({
-      chunk,
-      full: fullText,
-    });
+      onChunk({
+        chunk: content,
+        full: fullText,
+      });
+    } catch (err) {
+      console.error('Parsing error', err);
+    }
   };
 
   eventSource.onerror = (err) => {
