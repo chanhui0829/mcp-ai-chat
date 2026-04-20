@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 
 import ChatWindow from '../components/chat/chatWindow';
 import ChatInput from '../components/chat/chatInput';
-import { useChatStore, subscribeChatStorage } from '../store/chat.store';
+import { useChatStore } from '../store/chat.store';
 import { sendMessageStream } from '../api/mcp';
 
 function ChatPage() {
@@ -23,7 +23,6 @@ function ChatPage() {
 
   useEffect(() => {
     loadChats();
-    subscribeChatStorage();
   }, []);
 
   useEffect(() => {
@@ -32,15 +31,20 @@ function ChatPage() {
     }
   }, [id, chats]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim() || loading) return;
 
     if (!currentChatId) createChat();
 
+    let targetChatId = currentChatId;
+
+    if (!targetChatId) {
+      targetChatId = await createChat();
+      if (!targetChatId) return;
+    }
+
     const requestId = ++currentRequestId.current;
     const userInput = input;
-
-    const targetChatId = currentChatId;
 
     setInput('');
     setLoading(true);

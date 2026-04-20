@@ -99,10 +99,12 @@ export default function ChatList({ setDeleteTargetId, sidebarOpen, setSidebarOpe
 
       {/* 새 채팅 */}
       <button
-        onClick={() => {
-          const newId = createChat();
-          navigate(`/chat/${newId}`);
-          setSidebarOpen(false);
+        onClick={async () => {
+          const newId = await createChat();
+          if (newId) {
+            navigate(`/chat/${newId}`);
+            setSidebarOpen(false);
+          }
         }}
         className="w-full flex items-center justify-center gap-1 bg-blue-500 hover:bg-blue-400 text-white py-2 rounded-lg mb-4"
       >
