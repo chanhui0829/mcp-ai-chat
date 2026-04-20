@@ -27,19 +27,24 @@ type BlockProps = {
 
 export default function CaseStudy() {
   return (
-    <div className="flex-1 h-full overflow-y-auto">
+    <div className="flex-1 h-full overflow-y-auto bg-gray-50">
       <div className="max-w-5xl mx-auto px-6 py-10 space-y-10">
         {/* 🔥 HERO */}
-        <div className="bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 text-white p-6 rounded-2xl shadow-lg">
-          <h1 className="flex items-center text-3xl font-bold mb-2 gap-2 leading-none">
-            <span className="text-3xl">💬</span>
+        <div className="bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 text-white p-8 rounded-3xl shadow-xl">
+          <h1 className="flex items-center text-4xl font-extrabold mb-3 gap-3 leading-none">
+            <span className="text-4xl">💬</span>
             <span>FlowChat</span>
           </h1>
-          <p className="opacity-90">Streaming 기반 AI 채팅 애플리케이션</p>
+          <p className="text-lg opacity-90 font-medium">
+            실시간 스트리밍 기술을 활용한 AI 인터랙션 최적화
+          </p>
 
-          <div className="flex gap-2 mt-4 flex-wrap">
-            {['React', 'Zustand', 'Streaming', 'UX'].map((tag) => (
-              <span key={tag} className="text-xs bg-white/20 px-3 py-1 rounded-full">
+          <div className="flex gap-2 mt-6 flex-wrap">
+            {['React', 'TypeScript', 'Zustand', 'SSE(Streaming)', 'AbortController'].map((tag) => (
+              <span
+                key={tag}
+                className="text-xs font-bold bg-white/20 px-4 py-1.5 rounded-full backdrop-blur-md"
+              >
                 {tag}
               </span>
             ))}
@@ -47,21 +52,43 @@ export default function CaseStudy() {
         </div>
 
         <Section title="📌 프로젝트 개요">
-          Streaming 기반 AI 채팅 애플리케이션으로, 실시간 응답 처리 과정에서 발생하는 비동기 흐름
-          문제와 데이터 정합성 문제를 해결하는 데 집중했습니다. 특히 요청 간 충돌(Race Condition),
-          응답 순서 역전, chunk 단위 데이터 처리 문제를 해결하며 자연스럽고 신뢰도 높은 대화 UX를
-          구현했습니다.
+          <div className="space-y-4">
+            <p>
+              사용자와 AI 간의 심리스한 대화를 위해
+              <span className="mx-1 font-bold text-blue-600 bg-blue-50 px-1 rounded">
+                Server-Sent Events(SSE)
+              </span>
+              기반 스트리밍을 구현했습니다.
+            </p>
+            <p>
+              단순한 데이터 수신을 넘어, 실시간 환경에서 마주할 수 있는
+              <span className="font-semibold text-gray-900 border-b-2 border-red-200">
+                기술적 난제들
+              </span>
+              을 해결하며 안정적인 UX를 구축하는 데 집중했습니다.
+            </p>
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm mt-2">
+              <li className="flex items-center gap-2 text-gray-600">
+                <span className="text-red-500">✔</span> Race Condition(경쟁 상태) 제어
+              </li>
+              <li className="flex items-center gap-2 text-gray-600">
+                <span className="text-red-500">✔</span> JSON Chunk 파싱 에러 해결
+              </li>
+            </ul>
+          </div>
         </Section>
 
         <div>
-          <h2 className="text-xl font-semibold mb-4">🛠 기술 스택</h2>
-
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <span className="w-1.5 h-6 bg-blue-600 rounded-full"></span>
+            🛠 기술 스택
+          </h2>
           <div className="flex flex-wrap gap-3">
-            {['React', 'TypeScript', 'Zustand', 'React Query', 'Tailwind', 'Node.js'].map(
+            {['React 18', 'TypeScript', 'Zustand', 'Tailwind CSS', 'Axios (SSE)', 'Express'].map(
               (tech) => (
                 <span
                   key={tech}
-                  className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-full shadow-sm hover:bg-gray-200 transition"
+                  className="px-5 py-2.5 text-sm font-medium bg-white text-gray-700 rounded-xl border shadow-sm hover:border-blue-400 transition"
                 >
                   {tech}
                 </span>
@@ -71,63 +98,59 @@ export default function CaseStudy() {
         </div>
 
         {/* 🔥 트러블슈팅 */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">🔥 트러블슈팅</h2>
+        <div className="space-y-8">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <span className="w-1.5 h-6 bg-red-500 rounded-full"></span>
+            🔥 핵심 트러블슈팅
+          </h2>
 
-          <div className="space-y-6">
-            <Trouble
-              title="Streaming 응답 충돌 및 텍스트 깨짐 문제"
-              problem={`연속 요청 시 최신 질문과 무관한 응답이 출력되는 치명적인 UX 문제가 발생했습니다.
-이후 이전 스트리밍 응답이 뒤늦게 도착하거나, chunk 단위 데이터로 인해 텍스트가 중간에 깨지는 현상도 함께 발생했습니다.`}
-              cause={`스트리밍 환경에서는 응답이 chunk 단위로 전달되며 요청 간 완료 순서가 보장되지 않습니다.`}
-              solution={`requestId와 AbortController를 조합하여 요청을 제어하고 buffer 기반 파싱을 적용했습니다.`}
-              decision={`requestId는 UI 정합성 보장, AbortController는 네트워크 제어, buffer는 안정적 렌더링을 위해 선택했습니다.`}
-              before={`응답 순서가 뒤섞이고 텍스트가 깨져 대화 신뢰도가 크게 저하되었습니다.`}
-              after={`최신 요청 기준으로만 렌더링되며 텍스트와 코드블럭이 안정적으로 출력되어 UX가 크게 개선되었습니다.`}
-            />
+          <Trouble
+            title="비완성형 JSON Chunk 파싱 및 텍스트 깨짐"
+            problem={`스트리밍 데이터가 전송될 때 JSON 문자열이 중간에 잘려 들어오면서 JSON.parse() 에러가 발생하고, 
+결과적으로 답변이 화면에 출력되지 않거나 비정상적인 문자가 노출되었습니다.`}
+            cause={`네트워크 패킷 단위로 쪼개진 데이터(Chunk)가 유효한 JSON 형식을 갖추지 못한 상태에서 파싱을 시도했기 때문입니다.`}
+            solution={`데이터 수신부에서 전역 변수를 통한 버퍼링 로직을 구현하여 완전한 JSON 형태가 갖춰졌을 때만 파싱을 수행하도록 개선했습니다.`}
+            decision={`사용자에게 중간 과정을 보여주는 것보다 '정확한 마크다운'을 보여주는 것이 대화 신뢰도에 더 중요하다고 판단했습니다.`}
+            before={`답변 중간에 중괄호({})나 알 수 없는 문자가 섞여 나오며 서비스 신뢰도 저하.`}
+            after={`깨짐 없는 매끄러운 타이핑 효과 구현 및 마크다운 컴포넌트의 안정적 렌더링.`}
+          />
 
-            <Trouble
-              title="요청 취소 미지원으로 인한 UX 저하"
-              problem={`사용자가 요청 흐름을 제어할 수 없어 UX가 단절되는 문제가 발생했습니다.
-이후 이전 요청이 계속 진행되며 중복 응답과 불필요한 API 호출이 발생했습니다.`}
-              cause={`비동기 요청과 사용자 인터랙션 간 제어 흐름이 분리되어 있었습니다.`}
-              solution={`AbortController를 도입해 진행 중 요청을 취소하고 버튼 상태를 동적으로 변경했습니다.`}
-              decision={`사용자 제어권 확보와 네트워크 낭비 최소화를 위해 선택했습니다.`}
-              before={`여러 응답이 동시에 출력되며 UI 혼란과 리소스 낭비가 발생했습니다.`}
-              after={`요청 흐름이 즉시 제어되며 인터랙션 반응성과 UX가 크게 향상되었습니다.`}
-            />
-
-            <Trouble
-              title="상태와 라우팅 불일치 문제"
-              problem={`상태와 라우팅이 분리되어 UI 일관성이 깨지는 문제가 발생했습니다.
-이후 채팅 전환 시 2번 클릭해야 반영되거나 상태가 유지되지 않는 문제가 발생했습니다.`}
-              cause={`state와 URL이 분리되어 source of truth가 불명확했습니다.`}
-              solution={`URL 기반 상태 관리 구조로 통합했습니다.`}
-              decision={`라우팅 기반 상태 관리가 확장성과 유지보수에 유리하다고 판단했습니다.`}
-              before={`상태 불일치로 인해 UX 흐름이 끊기고 사용자 혼란이 발생했습니다.`}
-              after={`단일 source of truth 확보로 상태 일관성과 UX 안정성이 확보되었습니다.`}
-            />
-          </div>
+          <Trouble
+            title="요청 간 경쟁 상태(Race Condition)로 인한 응답 뒤섞임"
+            problem={`사용자가 짧은 간격으로 연속 질문을 보낼 경우, 먼저 보낸 질문의 답변이 나중에 도착하여 현재 질문의 답변을 덮어쓰는 문제가 발생했습니다.`}
+            cause={`비동기 스트리밍 요청의 완료 순서가 보장되지 않아, 이전 응답의 'fullText'가 현재 UI 상태를 오염시켰기 때문입니다.`}
+            solution={`requestId 레퍼런스를 활용해 최신 요청 ID가 아닐 경우 응답 처리를 무시하고, AbortController로 이전 네트워크 연결을 즉시 중단했습니다.`}
+            decision={`UI 정합성(requestId)과 리소스 최적화(AbortController)를 동시에 달성하기 위한 선택이었습니다.`}
+            before={`질문은 'A'인데 답변은 'B'가 출력되는 데이터 부정합 발생.`}
+            after={`항상 마지막에 보낸 질문에 대한 답변만 화면에 노출되어 UX 일관성 확보.`}
+          />
         </div>
 
-        {/* 🔥 설계 결정 (줄바꿈 + bullet) */}
-        <Section title="🧠 설계 결정 (Tech Decisions)">
-          {`- Zustand를 선택하여 간결한 전역 상태 관리 구조 구성
-- Streaming 기반 응답 처리로 자연스러운 UX 제공
-- requestId + AbortController 조합으로 UI/네트워크 동시 제어
-- URL을 상태 기준으로 사용하여 일관성 확보`}
+        {/* 🔥 설계 결정 */}
+        <Section title="🧠 주요 설계 결정 (Technical Decisions)">
+          <ul className="list-disc pl-5 space-y-3 text-gray-700">
+            <li>
+              <strong>Zustand:</strong> Flux 패턴의 직관적인 상태 관리를 통해 복잡한 채팅 로직을
+              간결하게 유지
+            </li>
+            <li>
+              <strong>URL 기반 상태 관리:</strong> 채팅방 ID를 URL 파라미터로 관리하여 새로고침
+              시에도 상태가 유지되는 'Single Source of Truth' 확보
+            </li>
+            <li>
+              <strong>Streamdown 라이브러리 커스텀:</strong> 마크다운 렌더링과 스트리밍 타이핑
+              효과를 결합하여 개발 생산성 향상
+            </li>
+          </ul>
         </Section>
 
         {/* 🔥 결과 */}
-        <Section title="📈 결과 및 배운 점">
-          스트리밍 기반 환경에서는 단순히 데이터를 받아 렌더링하는 것보다, 요청의 흐름과 상태를
-          어떻게 제어하느냐가 훨씬 중요하다는 것을 경험했습니다. 초기에는 응답을 그대로 출력하는
-          방식으로 구현했지만, 연속 요청 상황에서 응답 순서가 뒤섞이고 잘못된 데이터가 노출되는
-          문제를 겪었습니다. 이를 해결하는 과정에서 requestId를 통한 UI 정합성 제어와
-          AbortController를 통한 네트워크 레벨 요청 관리가 각각 다른 역할을 가진다는 것을 이해하게
-          되었고, 클라이언트에서도 “요청 제어”가 중요한 설계 요소라는 것을 배웠습니다. 이 경험을
-          통해 단순 기능 구현을 넘어서, 사용자 경험을 보장하기 위한 비동기 흐름 설계의 중요성을
-          체감할 수 있었습니다.
+        <Section title="📈 프로젝트 성과 및 회고">
+          단순히 API를 호출해 보여주는 것을 넘어, **네트워크 레벨의 비동기 흐름 제어**가 프론트엔드
+          UX에 얼마나 큰 영향을 미치는지 체감했습니다. 특히 스트리밍 환경에서 발생하는 **데이터의
+          단편화 현상**을 해결하며 브라우저가 데이터를 처리하는 원리를 더 깊게 이해하게 되었습니다.
+          이후 프로젝트에서는 에러 핸들링과 네트워크 재연결 로직(Exponential Backoff 등)까지
+          고려하여 더욱 견고한 서비스를 만들고 싶습니다.
         </Section>
       </div>
     </div>
@@ -138,32 +161,34 @@ export default function CaseStudy() {
 
 function Section({ title, children }: SectionProps) {
   return (
-    <div className="bg-white p-5 rounded-xl shadow-sm border">
-      <h2 className="text-lg font-semibold mb-3">{title}</h2>
-      <p className="text-gray-700 leading-7 whitespace-pre-line">{children}</p>
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <h2 className="text-lg font-bold mb-4 text-gray-800">{title}</h2>
+      <div className="text-gray-700 leading-7">{children}</div>
     </div>
   );
 }
 
 function Trouble({ title, problem, cause, solution, decision, before, after }: TroubleProps) {
   return (
-    <div className="p-5 border rounded-2xl bg-white shadow-sm hover:shadow-md transition space-y-4">
-      <h3 className="font-semibold text-lg">{title}</h3>
+    <div className="p-6 border rounded-3xl bg-white shadow-sm hover:shadow-lg transition-all duration-300 space-y-5">
+      <h3 className="font-bold text-xl text-blue-600">{title}</h3>
 
-      <Block label="문제" color="text-red-500" text={problem} />
-      <Block label="원인" color="text-orange-500" text={cause} />
-      <Block label="해결" color="text-blue-500" text={solution} />
-      <Block label="왜 이 방법?" color="text-purple-500" text={decision} />
+      <div className="grid gap-4">
+        <Block label="PROBLEM" color="text-red-500 bg-red-50" text={problem} />
+        <Block label="CAUSE" color="text-orange-500 bg-orange-50" text={cause} />
+        <Block label="SOLUTION" color="text-blue-500 bg-blue-50" text={solution} />
+        <Block label="DECISION" color="text-purple-500 bg-purple-50" text={decision} />
+      </div>
 
-      <div className="grid md:grid-cols-2 gap-3">
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm">
-          <div className="font-semibold text-red-600 mb-1">Before</div>
-          {before}
+      <div className="grid md:grid-cols-2 gap-4 mt-2">
+        <div className="p-4 bg-red-50/50 border border-red-100 rounded-2xl text-sm">
+          <div className="font-bold text-red-600 mb-2 flex items-center gap-1">❌ Before</div>
+          <p className="text-gray-600 leading-6">{before}</p>
         </div>
 
-        <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm">
-          <div className="font-semibold text-green-600 mb-1">After</div>
-          {after}
+        <div className="p-4 bg-green-50/50 border border-green-100 rounded-2xl text-sm">
+          <div className="font-bold text-green-600 mb-2 flex items-center gap-1">✅ After</div>
+          <p className="text-gray-600 leading-6">{after}</p>
         </div>
       </div>
     </div>
@@ -172,9 +197,11 @@ function Trouble({ title, problem, cause, solution, decision, before, after }: T
 
 function Block({ label, color, text }: BlockProps) {
   return (
-    <div>
-      <span className={`text-xs font-semibold ${color}`}>{label}</span>
-      <p className="text-sm text-gray-700 mt-1 leading-6 whitespace-pre-line">{text}</p>
+    <div className="group">
+      <span className={`text-[10px] tracking-widest font-black px-2 py-0.5 rounded-md ${color}`}>
+        {label}
+      </span>
+      <p className="text-[14px] text-gray-700 mt-1.5 leading-relaxed font-medium">{text}</p>
     </div>
   );
 }
