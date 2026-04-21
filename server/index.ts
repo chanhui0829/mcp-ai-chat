@@ -37,9 +37,10 @@ app.get('/mcp', async (req, res) => {
         3. 기술 용어는 영어로 쓰되, 설명은 한국어로 하라.
         4. 답변은 마크다운 형식을 엄격히 지켜라.`,
         },
-        { role: 'user', content: prompt },
+        { role: 'user', content: `${prompt}(반드시 한국어로만 답변해.)` },
       ],
       stream: true,
+      temperature: 0.3,
     });
 
     for await (const chunk of stream) {
