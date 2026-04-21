@@ -9,7 +9,7 @@ import { sendMessageStream, getChatSummary } from '../api/mcp';
 
 /**
  * @description 채팅의 메인 비즈니스 로직을 담당하는 페이지 컴포넌트입니다.
- * 스트리밍 통제 및 스토어 데이터 연동을 총괄합니다.
+ * 실시간 AI 스트리밍 통제 및 Zustand 스토어 데이터 연동을 총괄합니다.
  */
 function ChatPage() {
   const { id } = useParams();
@@ -30,11 +30,16 @@ function ChatPage() {
 
   const stopStreamRef = useRef<(() => void) | null>(null);
 
-  // 채팅 내역 로드 및 현재 채팅 세션 설정
+  /**
+   * [Life Cycle] 채팅 내역 초기 로드
+   */
   useEffect(() => {
     loadChats();
   }, [loadChats]);
 
+  /**
+   * [Life Cycle] URL 파라미터(id) 변경 시 현재 채팅 세션 활성화
+   */
   useEffect(() => {
     if (id && chats.length > 0) {
       setCurrentChat(id);
@@ -42,13 +47,14 @@ function ChatPage() {
   }, [id, chats, setCurrentChat]);
 
   /**
-   * [Core Logic] 메시지 전송 및 실시간 스트리밍 핸들러
+   * [Core Logic] 메시지 전송 및 실시간 AI 응답 스트리밍 핸들러
    */
   const handleSend = useCallback(async () => {
     if (!input.trim() || loading) return;
 
     let targetChatId = currentChatId;
 
+    // 새로운 채팅 세션일 경우 DB에 세션 생성 후 ID 확보
     if (!targetChatId) {
       targetChatId = await createChat();
       if (!targetChatId) return;
@@ -59,38 +65,47 @@ function ChatPage() {
     setLoading(true);
     setActiveChatId(targetChatId);
 
+    // 1. 사용자 메시지 즉시 반영 및 DB 저장
     await addMessage(targetChatId, {
       role: 'user',
       content: currentInput,
       time: new Date().toISOString(),
     });
 
+    // 2. AI 응답 스트리밍 시작
     stopStreamRef.current = sendMessageStream(
       currentInput,
       ({ full }) => setTyping(full),
       async (finalContent) => {
+        // [Finalization] 스트리밍 종료 시 최종 응답 저장
         await addMessage(targetChatId, {
           role: 'assistant',
           content: finalContent,
           time: new Date().toISOString(),
         });
-        const currentChat = chats.find((c) => c.id === targetChatId);
 
-        const isInitialChat =
-          currentChat?.title.includes('새로운') || currentChat?.messages.length <= 2;
+        /**
+         * [Feature] 자동 제목 생성 로직
+         * 첫 대화(제목이 초기 상태인 경우)일 때 AI를 통해 대화 주제를 요약합니다.
+         */
+        const currentChat = chats.find((c) => c.id === targetChatId);
+        const currentTitle = currentChat?.title || '새로운 채팅';
+        const messageCount = currentChat?.messages?.length || 0;
+
+        // 제목이 초기값이거나 메시지가 적은 상태(첫 대화)일 때 트리거
+        const isInitialChat = currentTitle.includes('새로운') || messageCount <= 2;
+
         if (targetChatId && isInitialChat) {
           try {
-            console.log('요약 요청 시작...'); // 배포 환경 콘솔확인
             const newTitle = await getChatSummary(currentInput);
-
             if (newTitle && newTitle !== '새로운 대화') {
               await updateChatTitle(targetChatId, newTitle);
-              console.log('제목 업데이트 완료:', newTitle);
             }
           } catch (error) {
-            console.error('요약 프로세스 에러:', error);
+            console.error('자동 제목 생성 실패:', error);
           }
         }
+
         setTyping('');
         setLoading(false);
         setActiveChatId(null);
@@ -100,10 +115,7 @@ function ChatPage() {
   }, [input, loading, currentChatId, createChat, addMessage, chats, updateChatTitle]);
 
   /**
-   * [UX] 스트리밍 중단 기능
-   */
-  /**
-   * [UX] 스트리밍 중단 기능
+   * [UX Logic] AI 응답 스트리밍 중단 처리
    */
   const handleStop = useCallback(async () => {
     const currentId = activeChatId;
@@ -127,8 +139,10 @@ function ChatPage() {
       setActiveChatId(null);
     }
   }, [typing, addMessage, activeChatId]);
+
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-white">
+      {/* 채팅 메시지 출력 영역 */}
       <ChatWindow
         typing={typing}
         loading={loading}
@@ -138,6 +152,7 @@ function ChatPage() {
           setTimeout(() => handleSend(), 0);
         }}
       />
+      {/* 사용자 입력 제어 영역 */}
       <ChatInput
         input={input}
         setInput={setInput}
