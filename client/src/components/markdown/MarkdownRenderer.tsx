@@ -7,9 +7,10 @@ type Props = {
 };
 
 export default function MarkdownRenderer({ content }: Props) {
+  const processedContent = content?.replace(/\*\*'/g, "'**")?.replace(/'\*\*/g, "**'");
   return (
     <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-      {content}
+      {processedContent || content}
     </ReactMarkdown>
   );
 }

@@ -11,18 +11,19 @@ type Props = {
 };
 
 /**
- * 메시지 입력 컴포넌트
- * 자동 높이 조절(Auto-growing) 및 Composition 상태를 고려한 엔터 키 이벤트를 처리합니다.
+ * ChatInput Component
+ * [Design Concept]: Minimalist High-End UI with Responsive Interactions
+ * [Features]: Auto-growing Textarea, IME Composition Handling, Adaptive Action Button
  */
 export default function ChatInput({ input, setInput, onSend, onStop, loading, typing }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // 현재 스트리밍 중인지 여부 판단
+  // 현재 스트리밍(AI 응답 중) 상태 여부 판단
   const isStreaming = loading || (typing && typing.length > 0);
 
   /**
-   * [UX 최적화] 입력 내용에 따라 텍스트 영역의 높이를 동적으로 조절합니다.
-   * 최대 높이(100px)를 초과하면 스크롤이 발생하도록 설계되었습니다.
+   * [Optimization] Auto-growing Textarea
+   * 입력 내용에 따라 텍스트 영역의 높이를 동적으로 계산하여 유연한 사용자 경험 제공
    */
   useEffect(() => {
     const el = textareaRef.current;
@@ -35,23 +36,35 @@ export default function ChatInput({ input, setInput, onSend, onStop, loading, ty
   const handleSend = useCallback(() => {
     if (!input.trim()) return;
     onSend();
-    // 전송 후 높이 초기화
+    // 전송 성공 시 텍스트 영역 높이 리셋
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
   }, [input, onSend]);
 
   return (
-    <div className="p-4 border-t bg-white">
-      <div className="flex items-center gap-3">
-        <div className="flex-1 flex items-center bg-gray-100 rounded-full focus-within:rounded-2xl px-5 py-2 min-h-[44px] shadow-sm transition-all duration-200 sidebar-scroll ">
+    <div className="p-6 bg-transparent">
+      <div className="max-w-4xl mx-auto flex items-end gap-3.5">
+        {/* Input Container: 입체감 있는 Glassmorphism 스타일 적용 */}
+        <div
+          className="
+          flex-1 flex items-center bg-white border border-zinc-200/60 rounded-3xl px-5 py-2.5 
+          min-h-[56px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300
+          focus-within:border-zinc-300 focus-within:shadow-[0_8px_40px_rgba(0,0,0,0.08)]
+          focus-within:ring-4 focus-within:ring-zinc-100
+        "
+        >
           <textarea
             ref={textareaRef}
             rows={1}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="메시지를 입력하세요..."
-            className="w-full resize-none bg-transparent outline-none text-sm leading-6 max-h-[100px] overflow-y-auto py-1"
+            placeholder="Type a message..."
+            className="
+              w-full resize-none bg-transparent outline-none text-[14.5px] leading-relaxed 
+              max-h-[120px] overflow-y-auto py-2.5 text-zinc-800 placeholder:text-zinc-400
+              scrollbar-hide
+            "
             onKeyDown={(e) => {
-              // 한글 조합 중 엔터 키 중복 전송 방지
+              // [UX] 한글 조합 중 엔터 키 전송 방지 (IME Composition Issue)
               if (e.nativeEvent.isComposing) return;
 
               if (e.key === 'Enter' && !e.shiftKey) {
@@ -62,20 +75,27 @@ export default function ChatInput({ input, setInput, onSend, onStop, loading, ty
           />
         </div>
 
-        {/* 전송/중단 버튼 - 상태에 따라 UI 유동적 변경 */}
+        {/* Action Button: 상태에 따라 유동적으로 변화하는 다이내믹 UI */}
         <button
           onClick={isStreaming ? onStop : handleSend}
           disabled={!isStreaming && !input.trim()}
           className={`
-            flex items-center justify-center w-11 h-11 rounded-full text-white shadow-md transition-all shrink-0
+            flex items-center justify-center w-14 h-14 rounded-2xl transition-all duration-300 shrink-0 mb-1
             ${
               isStreaming
-                ? 'bg-red-500 hover:bg-red-600 active:scale-95'
-                : 'bg-blue-600 hover:bg-blue-700 active:scale-95 disabled:bg-gray-300 disabled:shadow-none'
+                ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 active:scale-90 shadow-sm'
+                : 'bg-zinc-900 hover:bg-black text-white active:scale-95 shadow-xl shadow-zinc-200 disabled:bg-zinc-200 disabled:shadow-none disabled:text-zinc-400'
             }
           `}
+          aria-label={isStreaming ? 'Stop generation' : 'Send message'}
         >
-          {isStreaming ? <FiSquare size={18} fill="white" /> : <FiSend size={18} />}
+          {isStreaming ? (
+            <div className="flex items-center gap-1">
+              <FiSquare size={18} className="fill-current" />
+            </div>
+          ) : (
+            <FiSend size={19} className="relative left-[-1px] top-[1px]" />
+          )}
         </button>
       </div>
     </div>

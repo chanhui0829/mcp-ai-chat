@@ -37,9 +37,10 @@ app.get('/mcp', async (req, res) => {
         3. 기술 용어는 영어로 쓰되, 설명은 한국어로 하라.
         4. 답변은 마크다운 형식을 엄격히 지켜라.`,
         },
-        { role: 'user', content: prompt },
+        { role: 'user', content: `${prompt}(반드시 한국어로만 답변해.)` },
       ],
       stream: true,
+      temperature: 0.3,
     });
 
     for await (const chunk of stream) {
@@ -67,10 +68,11 @@ app.post('/mcp/Tsummarize', async (req, res) => {
         {
           role: 'system',
           content:
-            '사용자의 질문을 분석하여 10자 이내의 짧은 한국어 제목을 생성하라. 따옴표는 제거할 것.',
+            '사용자의 질문을 분석하여 10자 이내의 짧은 한국어 제목을 생성하라. 반드시 따옴표는 제거할 것.',
         },
         { role: 'user', content: `다음 내용을 요약해줘: ${prompt}` },
       ],
+      temperature: 0.3,
     });
 
     // 안전하게 데이터를 추출 (Optional Chaining 사용)
