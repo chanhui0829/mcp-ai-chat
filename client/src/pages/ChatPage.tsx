@@ -69,7 +69,7 @@ function ChatPage() {
       currentInput,
       ({ full }) => setTyping(full),
       async (finalContent) => {
-        await addMessage(targetChatId!, {
+        await addMessage(targetChatId, {
           role: 'assistant',
           content: finalContent,
           time: new Date().toISOString(),
@@ -83,7 +83,7 @@ function ChatPage() {
             // 서버에 요약 요청 (getChatSummary 함수 활용)
             const newTitle = await getChatSummary(currentInput);
             // 스토어의 updateChatTitle로 DB와 UI 업데이트
-            await updateChatTitle(targetChatId!, newTitle);
+            await updateChatTitle(targetChatId, newTitle);
           } catch (error) {
             console.error('제목 생성 실패:', error);
           }
@@ -101,7 +101,7 @@ function ChatPage() {
    * [UX] 스트리밍 중단 기능
    */
   const handleStop = useCallback(async () => {
-    if (stopStreamRef.current) {
+    if (stopStreamRef.current && activeChatId) {
       stopStreamRef.current();
       stopStreamRef.current = null;
 
