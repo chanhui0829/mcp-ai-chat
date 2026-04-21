@@ -100,8 +100,13 @@ function ChatPage() {
   /**
    * [UX] 스트리밍 중단 기능
    */
+  /**
+   * [UX] 스트리밍 중단 기능
+   */
   const handleStop = useCallback(async () => {
-    if (stopStreamRef.current && activeChatId) {
+    const currentId = activeChatId;
+
+    if (stopStreamRef.current && currentId) {
       stopStreamRef.current();
       stopStreamRef.current = null;
 
@@ -109,7 +114,7 @@ function ChatPage() {
         ? `${typing}\n\n> 요청을 중단하였습니다.`
         : '> 요청을 중단하였습니다.';
 
-      await addMessage(activeChatId, {
+      await addMessage(currentId, {
         role: 'assistant',
         content: interruptedContent,
         time: new Date().toISOString(),
@@ -120,7 +125,6 @@ function ChatPage() {
       setActiveChatId(null);
     }
   }, [typing, addMessage, activeChatId]);
-
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-white">
       <ChatWindow
