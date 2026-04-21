@@ -49,13 +49,19 @@ export const sendMessageStream = (
     }
   };
 
-  eventSource.onerror = (err) => {
-    console.error('SSE connection error:', err);
-    eventSource.close();
-  };
-
   // Abort 제어를 위해 close 함수 반환
   return () => {
     eventSource.close();
   };
+};
+
+export const getChatSummary = async (prompt: string) => {
+  try {
+    const targetUrl = `${MCP_URL}/Tsummarize`;
+
+    const { data } = await axios.post(targetUrl, { prompt });
+    return data.title;
+  } catch {
+    return '새로운 대화';
+  }
 };

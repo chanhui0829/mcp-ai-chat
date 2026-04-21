@@ -6,6 +6,7 @@ import 'dotenv/config';
 
 const app = express();
 app.use(cors({ origin: '*', methods: ['GET', 'POST'] }));
+app.use(express.json());
 
 const openai = new OpenAI({
   baseURL: 'https://openrouter.ai/api/v1',
@@ -52,6 +53,33 @@ app.get('/mcp', async (req, res) => {
   } catch (error) {
     console.error('Streaming error:', error);
     res.status(500).end();
+  }
+});
+
+// index.ts 에 추가
+app.post('/mcp/Tsummarize', async (req, res) => {
+  const { prompt } = req.body;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'openrouter/free',
+      messages: [
+        {
+          role: 'system',
+          content:
+            '사용자의 질문을 분석하여 10자 이내의 짧은 한국어 제목을 생성하라. 따옴표는 제거할 것.',
+        },
+        { role: 'user', content: `다음 내용을 요약해줘: ${prompt}` },
+      ],
+    });
+
+    // 안전하게 데이터를 추출 (Optional Chaining 사용)
+    const title = response.choices?.[0]?.message?.content?.trim() || '새로운 대화';
+
+    res.json({ title });
+  } catch (error: any) {
+    console.error('서버 요약 로직 에러:', error.response?.data || error.message);
+    res.status(500).json({ error: '요약 실패', detail: error.message });
   }
 });
 

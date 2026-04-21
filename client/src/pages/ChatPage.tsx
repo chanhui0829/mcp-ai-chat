@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 import ChatWindow from '../components/chat/chatWindow';
 import ChatInput from '../components/chat/chatInput';
 import { useChatStore } from '../store/chat.store';
-import { sendMessageStream } from '../api/mcp';
+import { sendMessageStream, getChatSummary } from '../api/mcp';
 
 /**
  * @description 채팅의 메인 비즈니스 로직을 담당하는 페이지 컴포넌트입니다.
@@ -13,8 +13,15 @@ import { sendMessageStream } from '../api/mcp';
  */
 function ChatPage() {
   const { id } = useParams();
-  const { addMessage, loadChats, createChat, currentChatId, chats, setCurrentChat } =
-    useChatStore();
+  const {
+    addMessage,
+    loadChats,
+    createChat,
+    currentChatId,
+    chats,
+    setCurrentChat,
+    updateChatTitle,
+  } = useChatStore();
 
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState('');
@@ -41,10 +48,8 @@ function ChatPage() {
     if (!input.trim() || loading) return;
 
     let targetChatId = currentChatId;
-    const isNewChat = !targetChatId;
 
-    // 새 채팅방 생성 로직
-    if (isNewChat) {
+    if (!targetChatId) {
       targetChatId = await createChat();
       if (!targetChatId) return;
     }
@@ -54,31 +59,34 @@ function ChatPage() {
     setLoading(true);
     setActiveChatId(targetChatId);
 
-    // 사용자의 메시지를 스토어 및 DB에 즉시 반영
-    await addMessage({
+    await addMessage(targetChatId, {
       role: 'user',
       content: currentInput,
       time: new Date().toISOString(),
     });
 
-    // SSE 스트리밍 요청
     stopStreamRef.current = sendMessageStream(
       currentInput,
-      ({ full }) => {
-        setTyping(full); // 실시간 렌더링용 상태 업데이트
-      },
+      ({ full }) => setTyping(full),
       async (finalContent) => {
-        // [Finalization] 스트리밍 종료 시 최종 메시지 저장
-        await addMessage({
-          role: 'ai',
+        await addMessage(targetChatId!, {
+          role: 'assistant',
           content: finalContent,
           time: new Date().toISOString(),
         });
-
-        // 제목이 없는 새 채팅일 경우 AI가 요약한 제목으로 업데이트
-        const target = chats.find((c) => c.id === targetChatId);
-        if (target && (target.title === '새로운 채팅' || !target.title)) {
-          // 여기에 제목 요약 로직 추가 가능
+        const targetChat = chats.find((c) => c.id === targetChatId);
+        if (
+          targetChat &&
+          (targetChat.title === '새로운 채팅' || targetChat.title === '새로운 대화')
+        ) {
+          try {
+            // 서버에 요약 요청 (getChatSummary 함수 활용)
+            const newTitle = await getChatSummary(currentInput);
+            // 스토어의 updateChatTitle로 DB와 UI 업데이트
+            await updateChatTitle(targetChatId!, newTitle);
+          } catch (error) {
+            console.error('제목 생성 실패:', error);
+          }
         }
 
         setTyping('');
@@ -87,7 +95,7 @@ function ChatPage() {
         stopStreamRef.current = null;
       }
     );
-  }, [input, loading, currentChatId, createChat, addMessage, chats]);
+  }, [input, loading, currentChatId, createChat, addMessage, chats, updateChatTitle]);
 
   /**
    * [UX] 스트리밍 중단 기능
@@ -101,8 +109,8 @@ function ChatPage() {
         ? `${typing}\n\n> 요청을 중단하였습니다.`
         : '> 요청을 중단하였습니다.';
 
-      await addMessage({
-        role: 'ai',
+      await addMessage(activeChatId, {
+        role: 'assistant',
         content: interruptedContent,
         time: new Date().toISOString(),
       });
@@ -111,7 +119,7 @@ function ChatPage() {
       setTyping('');
       setActiveChatId(null);
     }
-  }, [typing, addMessage]);
+  }, [typing, addMessage, activeChatId]);
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-white">

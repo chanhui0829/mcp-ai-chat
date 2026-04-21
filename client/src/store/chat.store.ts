@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
+import { getChatSummary } from '../api/mcp';
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
 /* -------------------------------------------------------------------------- */
 export type Message = {
-  role: 'user' | 'ai';
+  role: 'user' | 'assistant';
   content: string;
   time: string;
 };
@@ -23,7 +24,7 @@ type ChatStore = {
   loadChats: () => Promise<void>;
   createChat: () => Promise<string | null>;
   setCurrentChat: (id: string | null) => void;
-  addMessage: (msg: Message) => Promise<void>;
+  addMessage: (sessionId: string, msg: Message) => Promise<void>;
   deleteChat: (id: string) => Promise<void>;
   updateChatTitle: (id: string, newTitle: string) => Promise<void>;
 };
@@ -88,25 +89,42 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   /* 메시지 추가 및 영구 저장 */
-  addMessage: async (msg) => {
-    const { currentChatId } = get();
-    if (!currentChatId) return;
+  addMessage: async (sessionId: string, msg: Message) => {
+    const { chats, updateChatTitle } = get();
 
-    // UI 즉시 업데이트 (Optimistic Update 스타일)
+    const currentChat = chats.find((c) => c.id === sessionId);
+    if (!currentChat) return;
+
+    // UI 즉시 업데이트
     set((state) => ({
       chats: state.chats.map((c) =>
-        c.id === currentChatId ? { ...c, messages: [...c.messages, msg] } : c
+        c.id === sessionId ? { ...c, messages: [...c.messages, msg] } : c
       ),
     }));
 
     // DB 저장
-    await supabase.from('chat_messages').insert([
+    const { error } = await supabase.from('chat_messages').insert([
       {
-        session_id: currentChatId,
+        session_id: sessionId,
         role: msg.role,
         content: msg.content,
       },
     ]);
+
+    // 3. 제목 자동 생성 로직 (첫 번째 메시지이고, 역할이 'user'일 때만 실행)
+    if (msg.role === 'user' && currentChat.messages.length === 0) {
+      try {
+        const summaryTitle = await getChatSummary(msg.content);
+        if (summaryTitle) {
+          await updateChatTitle(sessionId, summaryTitle);
+        }
+      } catch (err) {
+        console.error('제목 요약 중 오류:', err);
+      }
+    }
+    if (error) {
+      console.error('메시지 저장 에러:', error.message);
+    }
   },
 
   deleteChat: async (id) => {
