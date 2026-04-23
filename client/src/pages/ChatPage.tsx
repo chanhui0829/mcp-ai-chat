@@ -93,7 +93,8 @@ function ChatPage() {
         const messageCount = currentChat?.messages?.length || 0;
 
         // 제목이 초기값이거나 메시지가 적은 상태(첫 대화)일 때 트리거
-        const isInitialChat = currentTitle.includes('새로운') || messageCount <= 2;
+        const isDefaultTitle = currentTitle === '새로운 채팅' || currentTitle === '새로운 대화';
+        const isInitialChat = isDefaultTitle && messageCount <= 2;
 
         if (targetChatId && isInitialChat) {
           try {

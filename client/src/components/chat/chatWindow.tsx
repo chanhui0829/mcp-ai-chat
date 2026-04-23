@@ -53,9 +53,9 @@ const formatDate = (dateStr: string) => {
 /**
  * @description 대화 인터페이스 메인 컴포넌트
  * [Portfolio Focus]:
- * 1. 초기 화면 스크롤 억제 (Full-height layout)
- * 2. 모바일 대응 반응형 디자인 (Horizontal to Vertical)
- * 3. 전역 CSS 간섭 방어 (Inline styles)
+ * 1. 고해상도 Zinc 테마 시스템 적용 (Minimalist Aesthetic)
+ * 2. 초기 화면 스크롤 억제 (Full-height layout)
+ * 3. 사용자 및 AI 응답 간의 명확한 시각적 대비 확보
  */
 export default function ChatWindow({
   typing,
@@ -69,6 +69,10 @@ export default function ChatWindow({
 
   // 새 채팅 화면인지 판별 (메시지가 없고, 로딩/타이핑 중이 아닐 때)
   const isNewChat = !currentChat?.messages.length && !typing && !loading;
+
+  const lastMessage = currentChat?.messages[currentChat.messages.length - 1];
+  const isLastMessageStreaming =
+    lastMessage?.role === 'assistant' && lastMessage.content === typing;
 
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -87,11 +91,6 @@ export default function ChatWindow({
   };
 
   return (
-    /**
-     * [해결 포인트 1]
-     * 새 채팅일 때는 overflow-hidden을 걸어 스크롤을 막고,
-     * 컨텐츠가 있을 때만 overflow-y-auto를 활성화합니다.
-     */
     <div
       className={`flex-1 h-full w-full bg-white relative ${
         isNewChat ? 'overflow-hidden' : 'overflow-y-auto sidebar-scroll'
@@ -101,32 +100,29 @@ export default function ChatWindow({
       {isNewChat && (
         <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center animate-in fade-in duration-700 px-4">
           <div className="flex flex-col items-center max-w-lg w-full text-center">
-            {/* 상단 로고 & 타이틀 영역: 모바일 한 줄 레이아웃 최적화 */}
             <div className="flex flex-row md:flex-col items-center justify-center gap-4 md:gap-0 mb-6 md:mb-10 w-full">
-              {/* 로고: 모바일에서 크기를 더 압축 (w-14) */}
-              <div className="w-14 h-14 md:w-24 md:h-24 bg-blue-50 rounded-2xl md:rounded-[2.5rem] flex items-center justify-center shadow-sm shrink-0 ring-1 ring-blue-100/50">
-                <Logo className="w-7 h-7 md:w-12 md:h-12 animate-pulse" />
+              {/* 로고 영역: 블루 테마에서 Zinc 테마로 변경 */}
+              <div className="w-14 h-14 md:w-24 md:h-24 bg-zinc-100 rounded-2xl md:rounded-[2.5rem] flex items-center justify-center shadow-sm shrink-0 ring-1 ring-zinc-200/50">
+                <Logo className="w-7 h-7 md:w-12 md:h-12 animate-pulse text-zinc-900" />
               </div>
 
-              {/* 텍스트 영역: 전역 CSS 간섭을 피하기 위해 인라인 스타일 적용 */}
               <div className="flex flex-col items-start md:items-center text-left md:text-center mt-0 md:mt-8">
                 <h1
-                  className="font-black text-slate-900 tracking-tight leading-tight"
+                  className="font-black text-zinc-900 tracking-tight leading-tight"
                   style={{
                     fontSize: 'clamp(1.15rem, 5vw, 1.875rem)',
                     margin: 0,
-                    color: '#0f172a',
+                    color: '#09090b',
                   }}
                 >
                   무엇을 도와드릴까요?
                 </h1>
-                <p className="hidden md:block text-slate-500 text-sm mt-3 leading-relaxed">
+                <p className="hidden md:block text-zinc-500 text-sm mt-3 leading-relaxed">
                   Flow AI와 함께 더 스마트하고 명쾌한 대화를 시작해보세요.
                 </p>
               </div>
             </div>
 
-            {/* 추천 질문 카드: 모바일에서 세로로 길어지지 않게 간격과 패딩 축소 */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full">
               {[
                 { q: '오늘 점심 메뉴 추천해줘', d: '든든하고 맛있는 한 끼' },
@@ -137,12 +133,12 @@ export default function ChatWindow({
                 <button
                   key={item.q}
                   onClick={() => onQuickSend(item.q)}
-                  className="p-3.5 md:p-5 bg-slate-50 border border-slate-100 rounded-xl md:rounded-2xl hover:bg-white hover:border-blue-200 hover:shadow-xl transition-all text-left group active:scale-[0.98]"
+                  className="p-3.5 md:p-5 bg-zinc-50 border border-zinc-100 rounded-xl md:rounded-2xl hover:bg-white hover:border-zinc-300 hover:shadow-xl transition-all text-left group active:scale-[0.98]"
                 >
-                  <div className="text-[12.5px] md:text-[13.5px] font-bold text-slate-800 group-hover:text-blue-600 mb-0.5 transition-colors line-clamp-1">
+                  <div className="text-[12.5px] md:text-[13.5px] font-bold text-zinc-800 group-hover:text-zinc-950 mb-0.5 transition-colors line-clamp-1">
                     {item.q}
                   </div>
-                  <div className="text-[10px] md:text-[11px] text-slate-400 font-medium transition-colors">
+                  <div className="text-[10px] md:text-[11px] text-zinc-400 font-medium transition-colors">
                     {item.d}
                   </div>
                 </button>
@@ -152,7 +148,7 @@ export default function ChatWindow({
         </div>
       )}
 
-      {/* 💬 메시지 리스트 (내용이 있을 때만 렌더링) */}
+      {/* 💬 메시지 리스트 */}
       {!isNewChat && (
         <div className="max-w-4xl mx-auto space-y-10 py-10">
           {currentChat?.messages.map((msg, i) => {
@@ -164,17 +160,17 @@ export default function ChatWindow({
               <div key={i} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {showDate && (
                   <div className="flex items-center gap-4 my-4">
-                    <div className="flex-1 h-px bg-slate-100" />
-                    <span className="px-4 py-1.5 bg-slate-50 text-slate-500 text-[10px] font-bold rounded-full tracking-widest uppercase">
+                    <div className="flex-1 h-px bg-zinc-100" />
+                    <span className="px-4 py-1.5 bg-zinc-50 text-zinc-500 text-[10px] font-bold rounded-full tracking-widest uppercase">
                       {formatDate(msg.time)}
                     </span>
-                    <div className="flex-1 h-px bg-slate-100" />
+                    <div className="flex-1 h-px bg-zinc-100" />
                   </div>
                 )}
 
                 <div className={`flex gap-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
                   {!isUser && (
-                    <div className="shrink-0 w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-100 border border-slate-200 text-blue-500">
+                    <div className="shrink-0 w-10 h-10 flex items-center justify-center rounded-2xl bg-zinc-100 border border-zinc-200 text-zinc-900">
                       <Logo className="w-5 h-5" />
                     </div>
                   )}
@@ -187,21 +183,21 @@ export default function ChatWindow({
                     <div
                       className={`relative px-5 py-3 rounded-2xl text-[14.5px] leading-7 shadow-sm transition-all ${
                         isUser
-                          ? 'bg-blue-600 text-white rounded-tr-none'
-                          : 'bg-white text-slate-800 border border-slate-100 rounded-tl-none'
+                          ? 'bg-zinc-900 text-white rounded-tr-none'
+                          : 'bg-white text-zinc-800 border border-zinc-100 rounded-tl-none'
                       }`}
                       style={{
-                        color: isUser ? '#ffffff' : '#1e293b',
+                        color: isUser ? '#ffffff' : '#18181b',
                         fontWeight: isUser ? '500' : 'normal',
                       }}
                     >
                       {!isUser && (
                         <button
                           onClick={() => copyToClipboard(msg.content, i)}
-                          className="absolute -top-1 -right-10 p-2 text-slate-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 md:opacity-40 transition-opacity"
+                          className="absolute -top-1 -right-10 p-2 text-zinc-400 hover:text-zinc-900 opacity-0 group-hover:opacity-100 md:opacity-40 transition-opacity"
                         >
                           {copiedIndex === i ? (
-                            <FiCheck size={16} className="text-green-500" />
+                            <FiCheck size={16} className="text-emerald-500" />
                           ) : (
                             <FiCopy size={16} />
                           )}
@@ -215,13 +211,13 @@ export default function ChatWindow({
                       )}
                     </div>
 
-                    <span className="text-[10px] font-bold mt-2 text-slate-500 uppercase tracking-tighter">
+                    <span className="text-[10px] font-bold mt-2 text-zinc-400 uppercase tracking-tighter">
                       {formatTime(msg.time)}
                     </span>
                   </div>
 
                   {isUser && (
-                    <div className="shrink-0 w-10 h-10 flex items-center justify-center rounded-2xl bg-blue-600 shadow-lg text-white">
+                    <div className="shrink-0 w-10 h-10 flex items-center justify-center rounded-2xl bg-zinc-900 shadow-lg text-white">
                       <FiUser size={20} />
                     </div>
                   )}
@@ -230,22 +226,22 @@ export default function ChatWindow({
             );
           })}
 
-          {/* 로딩/타이핑 인디케이터 (메시지가 있을 때만 아래에 표시) */}
-          {isProcessingHere && (loading || typing) && (
+          {/* 로딩/타이핑 인디케이터: Zinc 스타일 적용 */}
+          {isProcessingHere && (loading || typing) && !isLastMessageStreaming && (
             <div className="flex gap-4">
-              <div className="shrink-0 w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-100 border border-slate-200 text-blue-500">
+              <div className="shrink-0 w-10 h-10 flex items-center justify-center rounded-2xl bg-zinc-100 border border-zinc-200 text-zinc-900">
                 <Logo className="w-5 h-5 animate-pulse" />
               </div>
-              <div className="w-fit max-w-[85%] md:max-w-[75%] px-6 py-5 rounded-2xl bg-white border border-blue-50 shadow-xl shadow-blue-900/5 rounded-tl-none">
+              <div className="w-fit max-w-[85%] md:max-w-[75%] px-6 py-5 rounded-2xl bg-white border border-zinc-100 shadow-xl shadow-zinc-900/5 rounded-tl-none">
                 {loading && !typing && (
                   <div className="flex gap-1.5 items-center h-6">
-                    <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" />
-                    <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:0.2s]" />
-                    <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:0.4s]" />
+                    <span className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" />
+                    <span className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                    <span className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-delay:0.4s]" />
                   </div>
                 )}
                 {typing && (
-                  <div className="leading-7 text-[14.5px] text-slate-800">
+                  <div className="leading-7 text-[14.5px] text-zinc-800">
                     <Streamdown mode="streaming" components={markdownComponents}>
                       {typing}
                     </Streamdown>
@@ -255,7 +251,6 @@ export default function ChatWindow({
             </div>
           )}
 
-          {/* 하단 앵커 요소 */}
           <div ref={bottomRef} className="h-10" />
         </div>
       )}
