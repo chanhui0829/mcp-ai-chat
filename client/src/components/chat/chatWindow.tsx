@@ -1,15 +1,17 @@
+//지울 컴포넌트
+
 import { useState, memo } from 'react'; // memo 추가
 import { Streamdown } from 'streamdown';
 import { FiCopy, FiCheck, FiUser } from 'react-icons/fi';
 
 /* Components & Stores */
 import { useChatStore } from '../../store/chat.store';
-import MarkdownRenderer from '../markdown/MarkdownRenderer';
-import { markdownComponents } from '../markdown/markdownComponents';
-import Logo from '../common/Logo';
+import MarkdownRenderer from '../common/markdown/MarkdownRenderer';
+import { markdownComponents } from '../common/markdown/markdownComponents';
+import Logo from '../../assets/Logo';
 
 /* Hooks */
-import { useChatScroll } from '../../hooks/useChatScroll';
+import { useChatScroll } from '../../features/chat/hooks/useChatScroll';
 
 type ChatWindowProps = {
   typing: string;
