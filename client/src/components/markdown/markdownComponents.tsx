@@ -1,14 +1,14 @@
 import type { Components } from 'react-markdown';
 import { CopyButton } from './CopyButton';
+import MemoizedCodeBody from './MemoizedCodeBody'; // 👈 분리한 컴포넌트 import
 
 /**
  * @description 프리미엄 마크다운 렌더링 UI 컴포넌트
  * @author 찬희 (REACT-CHANWEB)
  * @features
  * 1. 고급스러운 테두리와 백드롭 블러가 적용된 테이블 시스템
- * 2. 코드 블록 내 지능형 주석 하이라이팅
+ * 2. 코드 블록 내 지능형 주석 하이라이팅 (Memoized)
  * 3. 반응형 타이포그래피 및 가독성 최적화된 줄 간격
- * 4. 포트폴리오 최적화: Zinc 테마 기반의 세련된 다크/라이트 모드 대응 스타일
  */
 
 export const markdownComponents: Components = {
@@ -56,8 +56,7 @@ export const markdownComponents: Components = {
   ),
 
   /**
-   * 테이블
-   * - 부드러운 라운드 처리와 헤더 강조 적용
+   * 테이블: 부드러운 라운드 처리와 헤더 강조 적용
    */
   table: ({ children }) => (
     <div className="my-6 overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
@@ -77,7 +76,7 @@ export const markdownComponents: Components = {
   ),
 
   /**
-   * 코드 렌더링 컴포넌트
+   * 코드 렌더링 컴포넌트 (최적화 적용)
    */
   code({ className, children }) {
     const match = /language-(\w+)/.exec(className || '');
@@ -91,20 +90,6 @@ export const markdownComponents: Components = {
         </code>
       );
     }
-
-    const renderCodeWithComments = (text: string) => {
-      const parts = text.split(/(\/\/.*|\/\*[\s\S]*?\*\/)/g);
-      return parts.map((part, i) => {
-        if (part.startsWith('//') || part.startsWith('/*')) {
-          return (
-            <span key={i} className="text-slate-500 italic opacity-70">
-              {part}
-            </span>
-          );
-        }
-        return part;
-      });
-    };
 
     return (
       <div className="relative group my-8 overflow-hidden rounded-2xl border border-slate-800 bg-[#0f172a] shadow-xl">
@@ -123,11 +108,9 @@ export const markdownComponents: Components = {
           </div>
         </div>
 
-        {/* 코드 본문 영역 */}
+        {/* 코드 본문 영역: 메모이제이션된 컴포넌트 호출 */}
         <pre className="p-6 overflow-x-auto text-[14px] leading-7 font-mono text-slate-200 scrollbar-hide">
-          <code className="block whitespace-pre-wrap break-all">
-            {renderCodeWithComments(codeContent)}
-          </code>
+          <MemoizedCodeBody codeContent={codeContent} />
         </pre>
       </div>
     );
