@@ -6,10 +6,19 @@ import { getChatSummary } from '../api/mcp';
 /* Types                                                                      */
 /* -------------------------------------------------------------------------- */
 export type Message = {
+  id: string;
   role: 'user' | 'assistant';
   content: string;
   time: string;
 };
+
+interface DBChatMessage {
+  id: string;
+  role: 'user' | 'ai';
+  content: string;
+  created_at: string;
+  session_id: string;
+}
 
 export type Chat = {
   id: string;
@@ -28,13 +37,6 @@ type ChatStore = {
   deleteChat: (id: string) => Promise<void>;
   updateChatTitle: (id: string, newTitle: string) => Promise<void>;
 };
-
-interface DBChatMessage {
-  role: 'user' | 'ai';
-  content: string;
-  created_at: string;
-  session_id: string;
-}
 
 /**
  * @description Zustand를 활용한 전역 상태 관리 저장소입니다.
@@ -63,6 +65,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       id: s.id,
       title: s.title || '새로운 채팅',
       messages: (s.chat_messages || []).map((m: DBChatMessage) => ({
+        id: m.id,
         role: m.role,
         content: m.content,
         time: m.created_at,
