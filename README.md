@@ -70,11 +70,13 @@
 
 ## ⚙️ 실행 방법
 
-**1. 서버 실행 (API Proxy)** cd server  
+**1. 서버 실행 (API Proxy)** 
+cd server  
 npm install  
 npm run dev  
 
-**2. 클라이언트 실행** cd client  
+**2. 클라이언트 실행** 
+cd client  
 npm install  
 npm run dev  
 
@@ -82,11 +84,13 @@ npm run dev
 
 ## 🔐 환경 변수 설정
 
-**Client (.env)** VITE_API_URL=http://localhost:4000  
+**Client (.env)** 
+VITE_API_URL=http://localhost:4000  
 VITE_SUPABASE_URL=your_supabase_url  
 VITE_SUPABASE_ANON_KEY=your_supabase_key  
 
-**Server (server/.env)** OPENROUTER_API_KEY=your_openrouter_key  
+**Server (server/.env)** 
+OPENROUTER_API_KEY=your_openrouter_key  
 
 ---
 
