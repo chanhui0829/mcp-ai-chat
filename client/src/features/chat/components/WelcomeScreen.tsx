@@ -1,16 +1,24 @@
+import { memo, useMemo } from 'react';
 import Logo from '../../../assets/Logo';
 
 interface WelcomeScreenProps {
   onQuickSend: (text: string) => void;
 }
 
-export default function WelcomeScreen({ onQuickSend }: WelcomeScreenProps) {
-  const suggestions = [
-    { q: '오늘 점심 메뉴 추천해줘', d: '든든하고 맛있는 한 끼' },
-    { q: '주말 여행지 추천해줘', d: '이번 주말 떠나기 좋은 곳' },
-    { q: '간단한 스트레칭 방법', d: '집에서 따라하기 쉬운 루틴' },
-    { q: '동기부여 명언 알려줘', d: '힘찬 하루를 위한 메시지' },
-  ];
+const WelcomeScreen = memo(({ onQuickSend }: WelcomeScreenProps) => {
+  /**
+   * [Optimization] useMemo로 suggestions 메모이제이션
+   * 매번 렌더링 시 배열 재생성 방지
+   */
+  const suggestions = useMemo(
+    () => [
+      { q: '오늘 점심 메뉴 추천해줘', d: '든든하고 맛있는 한 끼' },
+      { q: '주말 여행지 추천해줘', d: '이번 주말 떠나기 좋은 곳' },
+      { q: '간단한 스트레칭 방법', d: '집에서 따라하기 쉬운 루틴' },
+      { q: '동기부여 명언 알려줘', d: '힘찬 하루를 위한 메시지' },
+    ],
+    []
+  );
 
   return (
     <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center animate-in fade-in duration-700 px-4">
@@ -48,4 +56,7 @@ export default function WelcomeScreen({ onQuickSend }: WelcomeScreenProps) {
       </div>
     </div>
   );
-}
+});
+
+WelcomeScreen.displayName = 'WelcomeScreen';
+export default WelcomeScreen;

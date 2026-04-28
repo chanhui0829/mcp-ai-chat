@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useCallback, memo, useRef } from 'react';
+import { FixedSizeList } from 'react-window';
 import { Streamdown } from 'streamdown';
 import Logo from '../../../assets/Logo';
 import { useChatStore } from '../../../store/chat.store';
@@ -22,7 +23,7 @@ interface ChatWindowProps {
  * 2. Real-time Streaming Render: Streamdown 라이브러리를 활용하여 마크다운 형식을 실시간 렌더링.
  * 3. Conditional Rendering: 대화 내역 유무에 따라 WelcomeScreen과 MessageList를 전환.
  */
-export default function ChatWindow({
+const ChatWindow = memo(function ChatWindow({
   typing,
   loading,
   activeChatId,
@@ -44,53 +45,82 @@ export default function ChatWindow({
 
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
-  /** * [Performance] 최신 대화 흐름 유지를 위해 최근 메시지 슬라이싱 및
-   * 메시지 변화 감지에 따른 스크롤 핸들링
-   */
-  const displayMessages = currentChat?.messages ? currentChat.messages.slice(-20) : []; // 상향 조정 권장 (기존 -10)
-  const { scrollRef, handleScroll } = useChatScroll([displayMessages, typing]);
-
   /**
    * [Feature] 클립보드 복사 유틸리티
+   * [Optimization] useCallback으로 메모이제이션하여 불필요한 재생성 방지
    */
-  const copyToClipboard = (text: string, index: number) => {
+  const copyToClipboard = useCallback((text: string, index: number) => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 1500);
-  };
+  }, []);
+
+  /** * [Performance] 가상 스크롤을 위한 메시지 목록
+   * react-window의 FixedSizeList를 사용하여 대량의 메시지도 효율적으로 렌더링
+   */
+  const displayMessages = currentChat?.messages || [];
+  const { scrollRef, handleScroll } = useChatScroll([displayMessages, typing]);
+
+  /**
+   * [Virtual Scroll] 리스트 참조
+   */
+  const listRef = useRef<FixedSizeList>(null);
+
+  /**
+   * [Virtual Scroll] 메시지 아이템 렌더러
+   */
+  const Row = useCallback(
+    ({ index, style }: { index: number; style: React.CSSProperties }) => {
+      const msg = displayMessages[index];
+      if (!msg) return null;
+
+      return (
+        <div style={style}>
+          <MessageItem
+            key={msg.id || index}
+            index={index}
+            msg={msg}
+            isUser={msg.role === 'user'}
+            showDate={
+              !displayMessages[index - 1] || !isSameDay(displayMessages[index - 1].time, msg.time)
+            }
+            onCopy={copyToClipboard}
+            copiedIndex={copiedIndex}
+          />
+        </div>
+      );
+    },
+    [displayMessages, copyToClipboard, copiedIndex]
+  );
 
   return (
     <div
       ref={scrollRef}
       onScroll={handleScroll}
       className={`flex-1 h-full w-full bg-white relative ${
-        isNewChat ? 'overflow-hidden' : 'overflow-y-auto sidebar-scroll'
+        isNewChat ? 'overflow-hidden' : 'overflow-hidden'
       } px-4 md:px-10`}
     >
       {isNewChat ? (
         /* 초기 진입 시 웰컴 스크린 가이드 */
         <WelcomeScreen onQuickSend={onQuickSend} />
       ) : (
-        <div className="max-w-4xl mx-auto space-y-10 py-10">
-          {/* 메시지 히스토리 렌더링 */}
-          {displayMessages.map((msg, i) => (
-            <MessageItem
-              key={msg.id || i}
-              index={i}
-              msg={msg}
-              isUser={msg.role === 'user'}
-              // 날짜 변경 시점에만 구분선 표시를 위한 로직
-              showDate={
-                !displayMessages[i - 1] || !isSameDay(displayMessages[i - 1].time, msg.time)
-              }
-              onCopy={copyToClipboard}
-              copiedIndex={copiedIndex}
-            />
-          ))}
+        <div className="max-w-4xl mx-auto py-10 h-full flex flex-col">
+          {/* [Virtual Scroll] 메시지 히스토리 렌더링 */}
+          <FixedSizeList
+            ref={listRef}
+            height={scrollRef.current?.clientHeight || 600}
+            itemCount={displayMessages.length}
+            itemSize={200}
+            width="100%"
+            className="overflow-y-auto sidebar-scroll"
+          >
+            {Row}
+          </FixedSizeList>
 
           {/* [Streaming UI] AI 응답 스트리밍 및 로딩 인디케이터 */}
           {isProcessingHere && (loading || typing) && !isLastMessageStreaming && (
-            <div className="flex gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="flex gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 mt-4">
               {/* AI 브랜드 아이콘 */}
               <div className="shrink-0 w-10 h-10 flex items-center justify-center rounded-2xl bg-zinc-100 border border-zinc-200 text-zinc-900 shadow-sm">
                 <Logo className="w-5 h-5 animate-pulse" />
@@ -126,4 +156,7 @@ export default function ChatWindow({
       )}
     </div>
   );
-}
+});
+
+ChatWindow.displayName = 'ChatWindow';
+export default ChatWindow;

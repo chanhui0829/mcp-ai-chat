@@ -15,6 +15,10 @@
 * **관심사 분리(SoC):** 비즈니스 로직(Hooks), UI(Components), 데이터 통신(API/Services)을 도메인 단위(`features/chat`)로 응집시켜 유지보수성을 극대화했습니다.
 * **Custom Hooks Abstraction:** `useChat`, `useChatListLogic` 등 커스텀 훅을 통해 컴포넌트 내 복잡한 로직을 추상화했습니다.
 
+### ⚡ 성능 최적화
+* **React Performance Optimization:** React.memo, useCallback, useMemo를 적용하여 불필요한 리렌더링을 방지하고 렌더링 성능을 최적화했습니다.
+* **Virtual Scrolling:** react-window 라이브러리를 도입하여 대량의 메시지도 부드럽게 스크롤할 수 있는 가상 스크롤을 구현했습니다.
+
 ### 📚 데이터 관리 및 반응형 UX/UI
 * **Database (Supabase):** 세션별 대화 이력을 영구 저장하고, 실시간 제목 생성 API(`Tsummarize`)를 연동하여 채팅 목록을 자동 관리합니다.
 * **Adaptive Interface:** 모바일 전용 사이드바와 헤더 레이아웃을 최적화하여 데스크탑과 모바일 모두에서 최적의 채팅 경험을 제공합니다.
@@ -34,9 +38,10 @@
 ## 🧠 기술 스택
 
 ### Frontend
-* **Core:** React 18, TypeScript, Vite
+* **Core:** React 19, TypeScript, Vite
 * **State Management:** Zustand, TanStack Query (React Query)
 * **Styling:** Tailwind CSS, Lucide React (Icons)
+* **Performance:** react-window (Virtual Scrolling)
 * **Communication:** SSE (Server-Sent Events), Axios
 
 ### Backend (Proxy)
@@ -107,6 +112,8 @@ OPENROUTER_API_KEY=your_openrouter_key
 > "도구의 사용법보다, 문제의 본질을 파악하고 최적의 구조를 설계하는 엔지니어링 과정에 집중했습니다."
 
 단순히 AI 채팅 기능을 구현하는 것을 넘어, 대규모 데이터를 처리할 때 발생하는 UI 병목 현상을 해결하고 컴포넌트 간의 결합도를 낮추기 위한 아키텍처 고민에 많은 시간을 투자했습니다. 이러한 고민의 흔적은 프로젝트 내 **Case-Study** 페이지에 상세히 기록되어 있습니다.
+
+개발 과정에서 AI 기반 코드 어시스턴트를 보조 도구로 활용하여 반복적인 작업을 자동화하고, 더 깊이 있는 아키텍처 설계와 성능 최적화에 집중할 수 있었습니다. 이를 통해 개발 효율성을 높이면서도 핵심적인 문제 해결과 설계 능력을 증명할 수 있었습니다.
 
 ---
 
