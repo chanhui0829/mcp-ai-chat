@@ -20,11 +20,19 @@ export const streamChat = async (req: Request, res: Response) => {
     const stream = await openai.chat.completions.create({
       model: 'openrouter/free',
       messages: [
-        { role: 'system', content: `너는 개발자를 돕는 전문 어시스턴트이다... (생략)` },
-        { role: 'user', content: `${prompt}(반드시 한국어로만 답변해.)` },
+        {
+          role: 'system',
+          content: `너는 사용자의 질문에 명확하고 유용한 답변을 제공하는 전문 AI 어시스턴트이다. 
+- 반드시 한국어로만 답변해라.
+- 기술적인 질문에는 구체적인 코드 예시와 설명을 포함해라.
+- 복잡한 개념은 쉽게 설명해라.
+- 답변은 간결하면서도 충분한 정보를 제공해라.
+- 확실하지 않은 정보는 추측하지 말고 모른다고 인정해라.`,
+        },
+        { role: 'user', content: prompt },
       ],
       stream: true,
-      temperature: 0.3,
+      temperature: 0.1,
     });
 
     for await (const chunk of stream) {
@@ -48,10 +56,13 @@ export const summarizeTitle = async (req: Request, res: Response) => {
     const response = await openai.chat.completions.create({
       model: 'openrouter/free',
       messages: [
-        { role: 'system', content: '10자 이내의 짧은 한국어 제목을 생성하라...' },
-        { role: 'user', content: `다음 내용을 요약해줘: ${prompt}` },
+        {
+          role: 'system',
+          content: '너는 대화 내용을 10자 이내의 짧은 한국어 제목으로 요약하는 전문가이다. 제목만 출력하고, 다른 설명이나 괄호 안의 내용은 절대 포함하지 마라.',
+        },
+        { role: 'user', content: prompt },
       ],
-      temperature: 0.3,
+      temperature: 0.1,
     });
     const title = response.choices?.[0]?.message?.content?.trim() || '새로운 대화';
     res.json({ title });

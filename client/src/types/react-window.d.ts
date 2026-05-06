@@ -16,4 +16,6 @@ declare module 'react-window' {
     className?: string;
   }
   export class FixedSizeList extends Component<FixedSizeListProps> {}
+
+  export const FixedSizeList: React.FC<FixedSizeListProps>;
 }
