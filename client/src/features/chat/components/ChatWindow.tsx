@@ -1,10 +1,10 @@
-import { useState, useCallback, memo, useRef } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { useState, useCallback, memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Logo from '../../../assets/Logo';
 import { useChatStore } from '../../../store/chat.store';
 import { useChatScroll } from '../hooks/useChatScroll';
+import { useVirtualScroll } from '../hooks/useVirtualScroll';
 import { markdownComponents } from '../../../components/common/markdown/markdownComponents';
 import { isSameDay } from '../utils/dateHelpers';
 import MessageItem from './MessageItem';
@@ -80,17 +80,11 @@ const ChatWindow = memo(function ChatWindow({
     : displayMessages;
 
   /**
-   * [Virtual Scroll] 가상 스크롤 컨테이너 참조
+   * [Virtual Scroll] 가상 스크롤 훅 사용
    */
-  const parentRef = useRef<HTMLDivElement>(null);
-
-  /**
-   * [Virtual Scroll] 가상 스크롤 설정
-   */
-  const virtualizer = useVirtualizer({
-    count: virtualItems.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 150,
+  const { parentRef, getVirtualItems, getTotalSize, measureElement } = useVirtualScroll({
+    items: virtualItems,
+    estimateSize: 150,
     overscan: 5,
   });
 
@@ -116,12 +110,12 @@ const ChatWindow = memo(function ChatWindow({
           >
             <div
               style={{
-                height: `${virtualizer.getTotalSize()}px`,
+                height: `${getTotalSize()}px`,
                 width: '100%',
                 position: 'relative',
               }}
             >
-              {virtualizer.getVirtualItems().map((virtualItem) => {
+              {getVirtualItems().map((virtualItem) => {
                 const msg = virtualItems[virtualItem.index];
                 if (!msg) return null;
 
@@ -131,7 +125,7 @@ const ChatWindow = memo(function ChatWindow({
                     <div
                       key={virtualItem.key}
                       data-index={virtualItem.index}
-                      ref={virtualizer.measureElement}
+                      ref={measureElement}
                       style={{
                         position: 'absolute',
                         top: 0,
@@ -173,7 +167,7 @@ const ChatWindow = memo(function ChatWindow({
                   <div
                     key={virtualItem.key}
                     data-index={virtualItem.index}
-                    ref={virtualizer.measureElement}
+                    ref={measureElement}
                     style={{
                       position: 'absolute',
                       top: 0,
