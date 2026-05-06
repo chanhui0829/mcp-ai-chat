@@ -58,7 +58,7 @@ export const summarizeTitle = async (req: Request, res: Response) => {
       messages: [
         {
           role: 'system',
-          content: '너는 대화 내용을 10자 이내의 짧은 한국어 제목으로 요약하는 전문가이다. 제목만 출력하고, 다른 설명이나 괄호 안의 내용은 절대 포함하지 마라.',
+          content: '너는 대화 내용을 10자 이내의 짧은 한국어 제목으로 요약하는 전문가이다. 제목은 반드시 명사형으로 출력하고, 다른 설명이나 따옴표는 제거하고 괄호 안의 내용은 절대 포함하지 마라.',
         },
         { role: 'user', content: prompt },
       ],

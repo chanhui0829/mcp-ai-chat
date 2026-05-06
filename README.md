@@ -17,7 +17,8 @@
 
 ### ⚡ 성능 최적화
 * **React Performance Optimization:** React.memo, useCallback, useMemo를 적용하여 불필요한 리렌더링을 방지하고 렌더링 성능을 최적화했습니다.
-* **Virtual Scrolling:** react-window 라이브러리를 도입하여 대량의 메시지도 부드럽게 스크롤할 수 있는 가상 스크롤을 구현했습니다.
+* **Virtual Scrolling:** @tanstack/react-virtual 라이브러리를 도입하여 대량의 메시지도 부드럽게 스크롤할 수 있는 가상 스크롤을 구현했습니다.
+* **Markdown Rendering:** ReactMarkdown과 remarkGfm을 사용하여 마크다운 형식을 효율적으로 렌더링합니다.
 
 ### 📚 데이터 관리 및 반응형 UX/UI
 * **Database (Supabase):** 세션별 대화 이력을 영구 저장하고, 실시간 제목 생성 API(`Tsummarize`)를 연동하여 채팅 목록을 자동 관리합니다.
@@ -41,7 +42,8 @@
 * **Core:** React 19, TypeScript, Vite
 * **State Management:** Zustand, TanStack Query (React Query)
 * **Styling:** Tailwind CSS, Lucide React (Icons)
-* **Performance:** react-window (Virtual Scrolling)
+* **Performance:** @tanstack/react-virtual (Virtual Scrolling)
+* **Markdown:** ReactMarkdown, remarkGfm
 * **Communication:** SSE (Server-Sent Events), Axios
 
 ### Backend (Proxy)

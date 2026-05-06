@@ -9,6 +9,7 @@ export const useChat = () => {
   const [typing, setTyping] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [lastQuickSendText, setLastQuickSendText] = useState<string | null>(null);
 
   const stopStreamRef = useRef<(() => void) | null>(null);
 
@@ -89,10 +90,15 @@ export const useChat = () => {
   // 퀵 센드 (추천 질문 등)
   const handleQuickSend = useCallback(
     (text: string) => {
-      setInput(text);
-      setTimeout(() => handleSend(), 0);
+      if (lastQuickSendText === text) {
+        handleSend();
+        setLastQuickSendText(null);
+      } else {
+        setInput(text);
+        setLastQuickSendText(text);
+      }
     },
-    [handleSend]
+    [lastQuickSendText, handleSend]
   );
 
   return {

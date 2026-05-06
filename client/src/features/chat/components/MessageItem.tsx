@@ -23,7 +23,7 @@ interface MessageItemProps {
 const MessageItem = memo(
   ({ msg, showDate, isUser, onCopy, copiedIndex, index }: MessageItemProps) => {
     return (
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 mb-6">
         {showDate && (
           <div className="flex items-center gap-4 my-4">
             <div className="flex-1 h-px bg-zinc-100" />
