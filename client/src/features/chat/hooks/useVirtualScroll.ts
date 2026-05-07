@@ -16,8 +16,7 @@ interface UseVirtualScrollOptions {
 }
 
 interface UseVirtualScrollReturn {
-  parentRef: React.RefObject<HTMLDivElement>;
-  virtualizer: ReturnType<typeof useVirtualizer>;
+  parentRef: React.RefObject<HTMLDivElement | null>;
   getVirtualItems: () => ReturnType<ReturnType<typeof useVirtualizer>['getVirtualItems']>;
   getTotalSize: () => number;
   measureElement: (element: Element | null) => void;
@@ -53,7 +52,6 @@ export const useVirtualScroll = ({
 
   return {
     parentRef,
-    virtualizer,
     getVirtualItems: () => virtualizer.getVirtualItems(),
     getTotalSize: () => virtualizer.getTotalSize(),
     measureElement,
