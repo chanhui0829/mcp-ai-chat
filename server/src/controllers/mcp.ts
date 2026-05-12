@@ -11,28 +11,42 @@ const openai = new OpenAI({
  */
 export const streamChat = async (req: Request, res: Response) => {
   const prompt = req.query.prompt as string;
+  const historyQuery = req.query.history as string | undefined;
 
   try {
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
-    const stream = await openai.chat.completions.create({
-      model: 'openrouter/free',
-      messages: [
-        {
-          role: 'system',
-          content: `너는 사용자의 질문에 명확하고 유용한 답변을 제공하는 전문 AI 어시스턴트이다. 
+    // 대화 기록 파싱
+    let history: Array<{ role: 'user' | 'assistant' | 'system'; content: string }> = [];
+    if (historyQuery) {
+      try {
+        history = JSON.parse(historyQuery);
+      } catch (e) {
+        console.error('History parsing error:', e);
+      }
+    }
+
+    const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+      {
+        role: 'system',
+        content: `너는 사용자의 질문에 명확하고 유용한 답변을 제공하는 전문 AI 어시스턴트이다.
 - 반드시 한국어로만 답변해라.
 - 기술적인 질문에는 구체적인 코드 예시와 설명을 포함해라.
 - 복잡한 개념은 쉽게 설명해라.
 - 답변은 간결하면서도 충분한 정보를 제공해라.
 - 확실하지 않은 정보는 추측하지 말고 모른다고 인정해라.`,
-        },
-        { role: 'user', content: prompt },
-      ],
+      },
+      ...history,
+      { role: 'user', content: prompt },
+    ];
+
+    const stream = await openai.chat.completions.create({
+      model: 'openrouter/free',
+      messages,
       stream: true,
-      temperature: 0.1,
+      temperature: 0.4,
     });
 
     for await (const chunk of stream) {
@@ -58,11 +72,11 @@ export const summarizeTitle = async (req: Request, res: Response) => {
       messages: [
         {
           role: 'system',
-          content: '너는 대화 내용을 10자 이내의 짧은 한국어 제목으로 요약하는 전문가이다. 제목은 반드시 명사형으로 출력하고, 다른 설명이나 따옴표는 제거하고 괄호 안의 내용은 절대 포함하지 마라.',
+          content: '너는 대화 내용을 10자 이내의 짧은 한국어 제목으로 요약하는 전문가이다. 제목은 반드시 명사형으로만 출력하고 띄어쓰기는 사용해줘, 다른 설명이나 따옴표는 제거하고 괄호 안의 내용은 절대 포함하지 마라.',
         },
         { role: 'user', content: prompt },
       ],
-      temperature: 0.1,
+      temperature: 0.4,
     });
     const title = response.choices?.[0]?.message?.content?.trim() || '새로운 대화';
     res.json({ title });

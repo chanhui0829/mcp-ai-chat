@@ -60,7 +60,7 @@ const ChatWindow = memo(function ChatWindow({
    * @tanstack/react-virtual의 useVirtualizer를 사용하여 대량의 메시지도 효율적으로 렌더링
    */
   const displayMessages = currentChat?.messages || [];
-  const { scrollRef, handleScroll } = useChatScroll([displayMessages, typing]);
+  const { handleScroll } = useChatScroll([displayMessages, typing]);
 
   /**
    * [Virtual Scroll] 가상 스크롤을 위한 전체 아이템 목록
@@ -91,8 +91,6 @@ const ChatWindow = memo(function ChatWindow({
 
   return (
     <div
-      ref={scrollRef}
-      onScroll={handleScroll}
       className={`flex-1 h-full w-full bg-white relative ${
         isNewChat ? 'overflow-hidden' : 'overflow-hidden'
       } px-4 md:px-10`}
@@ -106,13 +104,15 @@ const ChatWindow = memo(function ChatWindow({
           <div
             ref={parentRef}
             className="overflow-y-auto sidebar-scroll"
-            style={{ height: scrollRef.current?.clientHeight || 600 }}
+            onScroll={handleScroll}
+            style={{ height: '100%' }}
           >
             <div
               style={{
                 height: `${getTotalSize()}px`,
                 width: '100%',
                 position: 'relative',
+                paddingBottom: '120px',
               }}
             >
               {getVirtualItems().map((virtualItem) => {

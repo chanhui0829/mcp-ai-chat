@@ -36,6 +36,13 @@ export const useChat = () => {
       time: new Date().toISOString(),
     });
 
+    // 현재 채팅의 메시지 기록 가져오기
+    const currentChat = chats.find((c) => c.id === targetChatId);
+    const history = currentChat?.messages.map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    })) || [];
+
     stopStreamRef.current = sendMessageStream(
       currentInput,
       ({ full }) => setTyping(full),
@@ -64,7 +71,8 @@ export const useChat = () => {
         setTyping('');
         setLoading(false);
         setActiveChatId(null);
-      }
+      },
+      history
     );
   }, [input, loading, currentChatId, createChat, addMessage, chats, updateChatTitle]);
 

@@ -35,19 +35,26 @@ export const sendMessage = async (prompt: string): Promise<string> => {
   return data.result;
 };
 
+interface Message {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
 /**
  * [핵심 로직] AI 응답 스트리밍(SSE) 처리 함수
  * * @description Server-Sent Events(SSE)를 활용한 실시간 데이터 수신 로직입니다.
  * 1. 스트리밍 종료 시 [DONE] 메시지를 수신하여 연결을 명확히 종료(Resource Leak 방지).
  * 2. 네트워크 패킷 분절 현상으로 인한 JSON 파싱 에러를 방지하기 위해 예외 처리를 강화함.
  * 3. 클로저를 활용하여 외부에서 스트림 연결을 강제로 해제할 수 있는 cleanup 함수를 반환함.
+ * 4. 대화 기록(history)을 전달하여 맥락 유지.
  */
 export const sendMessageStream = (
   prompt: string,
   onChunk: (data: { chunk: string; full: string }) => void,
-  onDone: (full: string) => void
+  onDone: (full: string) => void,
+  history: Message[] = []
 ) => {
-  const url = `${MCP_URL}?prompt=${encodeURIComponent(prompt)}`;
+  const url = `${MCP_URL}?prompt=${encodeURIComponent(prompt)}&history=${encodeURIComponent(JSON.stringify(history))}`;
   const eventSource = new EventSource(url);
   let fullText = '';
 
