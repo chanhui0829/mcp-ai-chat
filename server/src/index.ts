@@ -4,7 +4,7 @@ import 'dotenv/config';
 import mcpRouter from './routes/mcp';
 
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 
 app.use(cors({ origin: '*', methods: ['GET', 'POST'] }));
 app.use(express.json());
@@ -14,6 +14,6 @@ app.use(express.json());
  */
 app.use('/mcp', mcpRouter);
 
-app.listen(PORT, () => {
+app.listen(PORT,  () => {
   console.log(`🚀 MCP Server is running on http://localhost:${PORT}`);
 });
