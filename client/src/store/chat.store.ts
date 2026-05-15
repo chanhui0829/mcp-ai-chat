@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { chatService } from '../features/chat/services/chatService';
-import { getChatSummary } from '../features/chat/api/chatApi';
 import type { Chat, Message, DBChatMessage } from '../features/chat/types/chat';
 
 /**
@@ -98,7 +97,7 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
    * [UX Strategy] 낙관적 업데이트를 적용하여 실시간 대화 흐름의 속도감을 확보합니다.
    */
   addMessage: async (sessionId: string, msg: Message) => {
-    const { chats, updateChatTitle } = get();
+    const { chats } = get();
     const currentChat = chats.find((c) => c.id === sessionId);
     if (!currentChat) return;
 
@@ -112,14 +111,6 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
     try {
       // 2. 서버 영구 저장 (Service 레이어 활용)
       await chatService.saveMessage(sessionId, msg);
-
-      // 3. [Feature] 첫 사용자 메시지에 대한 제목 자동 요약
-      if (msg.role === 'user' && currentChat.messages.length === 0) {
-        const summaryTitle = await getChatSummary(msg.content);
-        if (summaryTitle) {
-          await updateChatTitle(sessionId, summaryTitle);
-        }
-      }
     } catch (error) {
       // 실무에서는 여기서 에러 발생 시 UI를 롤백하거나 에러 토스트를 띄우는 로직을 추가합니다.
       console.error('[Store: addMessage Sync Error]', error);

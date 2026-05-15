@@ -46,7 +46,7 @@ export const streamChat = async (req: Request, res: Response) => {
       model: 'openrouter/free',
       messages,
       stream: true,
-      temperature: 0.4,
+      temperature: 0.3,
     });
 
     for await (const chunk of stream) {
@@ -72,11 +72,16 @@ export const summarizeTitle = async (req: Request, res: Response) => {
       messages: [
         {
           role: 'system',
-          content: '너는 대화 내용을 10자 이내의 짧은 한국어 제목으로 요약하는 전문가이다. 제목은 반드시 명사형으로만 출력하고 띄어쓰기는 사용해줘, 다른 설명이나 따옴표는 제거하고 괄호 안의 내용은 절대 포함하지 마라.',
+          content: `너는 대화 내용을 10자 이내의 짧은 한국어 제목으로 요약하는 전문가이다.
+- 제목은 반드시 명사형으로만 출력하고 띄어쓰기는 사용해줘
+- 다른 설명이나 따옴표는 제거하고 괄호 안의 내용은 절대 포함하지 마라
+- 절대로 원문을 그대로 출력하지 말고 반드시 요약해라
+- 예: "오늘 점심 메뉴 추천해줘" → "점심 메뉴 추천"
+- 예: "주말 여행지 추천해줘" → "주말 여행지"`,
         },
         { role: 'user', content: prompt },
       ],
-      temperature: 0.4,
+      temperature: 0.3,
     });
     const title = response.choices?.[0]?.message?.content?.trim() || '새로운 대화';
     res.json({ title });

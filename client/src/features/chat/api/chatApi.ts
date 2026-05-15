@@ -25,6 +25,10 @@ interface StreamChunk {
 interface SummaryResponse {
   title: string;
 }
+interface Message {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
 
 /**
  * 단발성 메시지 전송 함수
@@ -34,11 +38,6 @@ export const sendMessage = async (prompt: string): Promise<string> => {
   const { data } = await axios.post<ChatResponse>(MCP_URL, { prompt });
   return data.result;
 };
-
-interface Message {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-}
 
 /**
  * [핵심 로직] AI 응답 스트리밍(SSE) 처리 함수
